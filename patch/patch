@@ -1,6 +1,0 @@
-#!/usr/bin/env sh
-set -e
-
-cd $(dirname $(readlink -f $0))
-export PATH="$(readlink -f ./bin):$PATH"
-gru lua/patch.lua "$@"
