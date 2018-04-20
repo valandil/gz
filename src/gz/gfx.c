@@ -170,7 +170,7 @@ void *gfx_data_append(void *data, size_t size)
 void gfx_flush(void)
 {
   gSPEndDisplayList(gfx_disp_p++);
-  gSPDisplayList(z64_ctxt.gfx->overlay.p++, gfx_disp);
+  gSPDisplayList((Gfx*)(0x8033B06D), gfx_disp);
   Gfx *disp_w = gfx_disp_w;
   gfx_disp_w = gfx_disp;
   gfx_disp = disp_w;
