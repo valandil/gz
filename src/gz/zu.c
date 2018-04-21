@@ -210,10 +210,12 @@ void zu_vlist_add_dl(struct zu_vlist *vlist,
         }
         break;
       }
+      #ifndef F3D_GBI
       case G_BRANCH_Z: {
         zu_vlist_add_dl(vlist, NULL, zu_seg_locate(&t_stab, rdphalf_1));
         break;
       }
+      #endif
       case G_RDPHALF_1: {
         rdphalf_1 = dl->lo;
         break;
