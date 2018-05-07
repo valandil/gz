@@ -84,7 +84,7 @@ void  gfx_mode_replace(enum gfx_mode mode, uint64_t value);
 /* all sizes are specified in number of bytes */
 Gfx  *gfx_disp_append(Gfx *disp, size_t size);
 void *gfx_data_append(void *data, size_t size);
-void  gfx_flush(void);
+void  gfx_flush();
 
 void                gfx_texldr_init(struct gfx_texldr *texldr);
 struct gfx_texture *gfx_texldr_load(struct gfx_texldr *texldr,

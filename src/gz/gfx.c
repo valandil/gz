@@ -8,6 +8,7 @@
 #include "gfx.h"
 #include "z64.h"
 #include "zu.h"
+#include "../../../sm64.h"
 
 #define           GFX_DISP_SIZE     0x10000
 static Gfx       *gfx_disp;
@@ -167,10 +168,10 @@ void *gfx_data_append(void *data, size_t size)
   return gfx_disp_d;
 }
 
-void gfx_flush(void)
+void gfx_flush()
 {
   gSPEndDisplayList(gfx_disp_p++);
-  gSPDisplayList((Gfx*)(0x8033B06D), gfx_disp);
+  gSPDisplayList(sm64_gDisplayListHead++,gfx_disp);
   Gfx *disp_w = gfx_disp_w;
   gfx_disp_w = gfx_disp;
   gfx_disp = disp_w;
