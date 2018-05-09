@@ -171,7 +171,7 @@ void *gfx_data_append(void *data, size_t size)
 void gfx_flush()
 {
   gSPEndDisplayList(gfx_disp_p++);
-  gSPDisplayList(sm64_gDisplayListHead++,gfx_disp);
+  gSPDisplayList(SM64_gDisplayListHead++,gfx_disp);
   Gfx *disp_w = gfx_disp_w;
   gfx_disp_w = gfx_disp;
   gfx_disp = disp_w;
