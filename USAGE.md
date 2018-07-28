@@ -1,4 +1,19 @@
 ## User manual
+- [Introduction](#introduction)
+- [Warps menu](#warps-menu)
+- [Scene menu](#scene-menu)
+- [Cheats menu](#cheats-menu)
+- [Inventory menu](#inventory-menu)
+- [Equips menu](#equips-menu)
+- [File menu](#file-menu)
+- [Watches menu](#watches-menu)
+- [Debug menu](#debug-menu)
+- [Settings menu](#settings-menu)
+- [Issues](#issues)
+
+### Introduction
+*Note: If you're using gz on the Wii VC, you should read the [Issues](#issues) section to find out about the differences in the VC version.*
+
 The main interface for accessing the provided tools is the utility menu.
 By default, this menu is brought up by pressing `R + L`,
 but this button combination can be changed (see [Settings](#settings-menu)).
@@ -59,6 +74,25 @@ which items have been collected, which enemies have been defeated, etc.
 The **load room** option loads the room with the specified index,
 if a room which such an index exists within the current scene.
 If that room is already the currently loaded room, it will be unloaded.
+**collision view**, when enabled, shows the static scene collision in the current scene.
+The collision polygons are color-coded to show special properties;
+- **Blue:** Hookshotable surface.
+- **Purple:** Surface with special interaction (ladder, vine, crawlspace, not climbable, grabbable).
+- **Red:** Void trigger.
+- **Green:** Load trigger.
+- **Light green:** Surface with special behavior (sand, quicksand, ice, lava, jabu wall, damaging wall, no recoil wall, void).
+- **Light yellow:** Slippery slope.
+- **White:** Normal surface.
+
+Note that collision polygons are affected by scene lighting and fog, which can cause their appearance to be misleading.
+The collision view **mode** decides how collision polygons are drawn.
+The _decal_ setting will draw polygons overlaid on scene textures,
+but will not produce any new surfaces (note however that most emulators do not correctly emulate this behavior).
+The _surface_ setting draws collision polygons as their own surfaces,
+but can produce depth flickering on existing scene textures.
+Collision polygons can be configured to be completely opaque, or see-through with the **translucent** option.
+The **reduced** option will reduce potential lag by only rendering collision polygons with some special property (i.e. colored polygons).
+When entering a new scene, or changing a collision view setting, the collision view must be disabled and re-enabled in order to update.
 **teleport slot** selects which position to save and load when using the
 teleportation commands (this can also be bound to a button combination, but is unbound by default).
 The bottom of the scene menu shows information about the current scene.
@@ -178,16 +212,16 @@ Pressing the plus icon will add a new watch,
 and pressing the cross next to a watch will remove that watch.
 After adding a watch, enter a memory address and value type to display the value at that address.
 These watch types are available:
-- **u8:** 8-bit value, unsigned.
-- **s8:** 8-bit value, signed.
-- **x8:** 8-bit value, hexadecimal.
-- **u16:** 16-bit value, unsigned.
-- **s16:** 16-bit value, signed.
-- **x16:** 16-bit value, hexadecimal.
-- **u32:** 32-bit value, unsigned.
-- **s32:** 32-bit value, signed.
-- **x32:** 32-bit value, hexadecimal.
-- **f32:** 32-bit value, IEEE-754 floating point.
+- **u8:** one-byte value, unsigned.
+- **s8:** one-byte value, signed.
+- **x8:** one-byte value, hexadecimal.
+- **u16:** two-byte value, unsigned.
+- **s16:** two-byte value, signed.
+- **x16:** two-byte value, hexadecimal.
+- **u32:** four-byte value, unsigned.
+- **s32:** four-byte value, signed.
+- **x32:** four-byte value, hexadecimal.
+- **f32:** four-byte value, IEEE 754 single-precision floating-point.
 
 Pressing the anchor button next to a watch will release the watch from the watches menu
 so that it's always visible, even when the menu is closed.
@@ -278,6 +312,7 @@ The following commands are available:
 *Default: `R + D-Left`*
 - **break free:** Attempts to break any effect that removes control of Link.
 *Default: `C-Up + L`*
+*VC Default: `Start + L`*
 - **levitate:** The classic L to levitate command.
 *Default: `L`*
 - **save position:** Saves Link's current position and orientation to the current position slot.
@@ -351,3 +386,11 @@ If this happens, you can restore the default settings by entering the following 
 
 _Note:_ Button combos that interfere with menu navigation for commands that aren't related to
 menuing are disabled while the utility menu is active.
+
+### Issues
+There are some known issues with the Wii VC version of gz;
+- The D-Pad on the Classic/Gamecube Controller is mapped to the L button on the Virtual Console. The WAD patcher remaps the D-Pad to be functional again, and maps C-Stick Down to L on the Virtual Console to provide access to the utility menu.
+- Disk features rely on the presence of the ED64 which does not exist on the Wii, and are therefore unavailable.
+- The scene explorer has graphical glitches due to poor emulation.
+- The reset command is not emulated correctly and has been removed.
+- The timer function is not emulated correctly and has been removed.

@@ -18,9 +18,13 @@
 #include "resource.h"
 #include "settings.h"
 #include "sys.h"
+#include "ucode.h"
 #include "watchlist.h"
 #include "z64.h"
 #include "zu.h"
+
+#define STRINGIZE(S)  STRINGIZE_(S)
+#define STRINGIZE_(S) #S
 
 struct equipment_item_option
 {
@@ -150,20 +154,21 @@ struct heap_node
 
 struct actor_debug_info
 {
-  uint8_t type;
-  uint8_t index;
+  struct menu_item *edit_item;
+  uint8_t           type;
+  uint8_t           index;
 };
 
 struct actor_spawn_info
 {
-  uint16_t  actor_no;
-  uint16_t  variable;
-  int32_t   x;
-  int32_t   y;
-  int32_t   z;
-  uint16_t  rx;
-  uint16_t  ry;
-  uint16_t  rz;
+  uint16_t        actor_no;
+  uint16_t        variable;
+  int32_t         x;
+  int32_t         y;
+  int32_t         z;
+  uint16_t        rx;
+  uint16_t        ry;
+  uint16_t        rz;
 };
 
 enum movie_state
@@ -173,6 +178,7 @@ enum movie_state
   MOVIE_PLAYING,
 };
 
+
 #define                     CPU_COUNTER_FREQ 46875000
 __attribute__((section(".data")))
 static _Bool                gz_ready = 0;
@@ -180,6 +186,7 @@ static uint8_t              profile = 0;
 static struct menu          menu_main;
 static struct menu          menu_explorer;
 static struct menu          menu_global_watches;
+static struct menu          menu_mem;
 static struct menu_item    *menu_font_option;
 static struct menu_item    *menu_watchlist;
 static _Bool                menu_active = 0;
@@ -707,6 +714,14 @@ void command_nextfile(void)
   memfile_slot = (memfile_slot + 1) % SETTINGS_MEMFILE_MAX;
 }
 
+void command_colview(void)
+{
+  if (col_view_state == 0)
+    col_view_state = 1;
+  else if (col_view_state == 2)
+    col_view_state = 3;
+}
+
 void command_recordmacro(void)
 {
   if (movie_state == MOVIE_RECORDING)
@@ -761,6 +776,7 @@ static struct command_info command_info[] =
   {"next position",     command_nextpos,      CMDACT_PRESS_ONCE},
   {"previous memfile",  command_prevfile,     CMDACT_PRESS_ONCE},
   {"next memfile",      command_nextfile,     CMDACT_PRESS_ONCE},
+  {"collision view",    command_colview,      CMDACT_PRESS_ONCE},
   {"record macro",      command_recordmacro,  CMDACT_PRESS_ONCE},
   {"play macro",        command_playmacro,    CMDACT_PRESS_ONCE},
   {"explore prev room", NULL,                 CMDACT_PRESS},
@@ -1614,6 +1630,10 @@ static int menu_font_option_proc(struct menu_item *item,
   if (reason == MENU_CALLBACK_CHANGED) {
     int font_resource = menu_font_options[menu_option_get(item)];
     settings->menu_settings.font_resource = font_resource;
+    if (settings->menu_settings.font_resource == RES_FONT_FIPPS)
+      gfx_mode_configure(GFX_MODE_TEXT, GFX_TEXT_NORMAL);
+    else
+      gfx_mode_configure(GFX_MODE_TEXT, GFX_TEXT_FAST);
     struct gfx_font *font = resource_get(font_resource);
     menu_set_font(&menu_main, font);
     menu_set_cell_width(&menu_main, font->char_width + font->letter_spacing);
@@ -1701,6 +1721,10 @@ static void apply_settings()
   menu_set_cell_width(&menu_main, font->char_width + font->letter_spacing);
   menu_set_cell_height(&menu_main, font->char_height + font->line_spacing);
   gfx_mode_set(GFX_MODE_DROPSHADOW, settings->menu_settings.drop_shadow);
+  if (settings->menu_settings.font_resource == RES_FONT_FIPPS)
+    gfx_mode_configure(GFX_MODE_TEXT, GFX_TEXT_NORMAL);
+  else
+    gfx_mode_configure(GFX_MODE_TEXT, GFX_TEXT_FAST);
   menu_set_pxoffset(&menu_main, settings->menu_x);
   menu_set_pyoffset(&menu_main, settings->menu_y);
   menu_imitate(&menu_global_watches, &menu_main);
@@ -1760,12 +1784,18 @@ static void load_room_proc(struct menu_item *item, void *data)
   if (new_room_index < z64_game.n_rooms) {
     if (new_room_index == z64_game.room_index) {
       z64_game.room_index = -1;
+      z64_game.room_ptr = NULL;
       z64_UnloadRoom(&z64_game, &z64_game.room_index);
+      z64_game.room_index = -1;
       z64_game.room_ptr = NULL;
     }
     else {
-      z64_LoadRoom(&z64_game, &z64_game.room_index, new_room_index);
+      z64_game.room_index = -1;
+      z64_game.room_ptr = NULL;
       z64_UnloadRoom(&z64_game, &z64_game.room_index);
+      z64_game.room_index = -1;
+      z64_game.room_ptr = NULL;
+      z64_LoadRoom(&z64_game, &z64_game.room_index, new_room_index);
     }
   }
 }
@@ -1813,6 +1843,32 @@ static int col_view_xlu_proc(struct menu_item *item,
     settings->menu_settings.col_view_xlu = 0;
   else if (reason == MENU_CALLBACK_THINK)
     menu_checkbox_set(item, settings->menu_settings.col_view_xlu);
+  return 0;
+}
+
+static int col_view_line_proc(struct menu_item *item,
+                              enum menu_callback_reason reason,
+                              void *data)
+{
+  if (reason == MENU_CALLBACK_SWITCH_ON)
+    settings->menu_settings.col_view_line = 1;
+  else if (reason == MENU_CALLBACK_SWITCH_OFF)
+    settings->menu_settings.col_view_line = 0;
+  else if (reason == MENU_CALLBACK_THINK)
+    menu_checkbox_set(item, settings->menu_settings.col_view_line);
+  return 0;
+}
+
+static int col_view_shade_proc(struct menu_item *item,
+                               enum menu_callback_reason reason,
+                               void *data)
+{
+  if (reason == MENU_CALLBACK_SWITCH_ON)
+    settings->menu_settings.col_view_shade = 1;
+  else if (reason == MENU_CALLBACK_SWITCH_OFF)
+    settings->menu_settings.col_view_shade = 0;
+  else if (reason == MENU_CALLBACK_THINK)
+    menu_checkbox_set(item, settings->menu_settings.col_view_shade);
   return 0;
 }
 
@@ -2065,19 +2121,31 @@ static int objects_draw_proc(struct menu_item *item,
 static void actor_index_dec_proc(struct menu_item *item, void *data)
 {
   struct actor_debug_info *info = data;
-  uint32_t max = z64_game.actor_list[info->type].length;
-  if (max == 0)
-    max = 1;
-  info->index = (info->index + max - 1) % max;
+  int type = info->type;
+  int index = info->index;
+  do {
+    if (--index >= 0)
+      break;
+    type = (type + 12 - 1) % 12;
+    index = z64_game.actor_list[type].length;
+  } while (type != info->type || index != info->index);
+  info->type = type;
+  info->index = index;
 }
 
 static void actor_index_inc_proc(struct menu_item *item, void *data)
 {
   struct actor_debug_info *info = data;
-  uint32_t max = z64_game.actor_list[info->type].length;
-  if (max == 0)
-    max = 1;
-  info->index = (info->index + 1) % max;
+  int type = info->type;
+  int index = info->index + 1;
+  do {
+    if (index < z64_game.actor_list[type].length)
+      break;
+    type = (type + 1) % 12;
+    index = 0;
+  } while (type != info->type || index != info->index);
+  info->type = type;
+  info->index = index;
 }
 
 static int actor_draw_proc(struct menu_item *item,
@@ -2099,18 +2167,78 @@ static int actor_draw_proc(struct menu_item *item,
     else
       info->index = 0;
   }
-  gfx_printf(font, x + cw * 17, y, "(%i)", max);
+  gfx_printf(font, x + cw * 14, y, "%i / %i", info->index, max);
   if (info->index < max) {
     z64_actor_t *actor = z64_game.actor_list[info->type].first;
     for (int i = 0; i < info->index; ++i)
       actor = actor->next;
-    gfx_printf(font, x, y + ch * 1, "%08" PRIx32 "  %04" PRIx16,
-               actor, actor->actor_id);
+    sprintf(info->edit_item->text, "%08" PRIx32, (uint32_t)actor);
+    gfx_printf(font, x + cw * 10, y + ch * 1, "%04" PRIx16, actor->actor_id);
     gfx_printf(font, x, y + ch * 2, "variable  %04" PRIx16, actor->variable);
+
+    {
+      Mtx m;
+      {
+        MtxF mf;
+        guTranslateF(&mf, actor->pos_2.x, actor->pos_2.y, actor->pos_2.z);
+        MtxF mt;
+        guRotateRPYF(&mt,
+                     actor->rot_2.x * M_PI / 0x8000,
+                     actor->rot_2.y * M_PI / 0x8000,
+                     actor->rot_2.z * M_PI / 0x8000);
+        guMtxCatF(&mt, &mf, &mf);
+        guMtxF2L(&mf, &m);
+      }
+      Vtx v[6] =
+      {
+        gdSPDefVtxC(-8192, 0,      0,      0, 0, 0xFF, 0x00, 0x00, 0x80),
+        gdSPDefVtxC(8192,  0,      0,      0, 0, 0xFF, 0x00, 0x00, 0x80),
+        gdSPDefVtxC(0,      -8192, 0,      0, 0, 0x00, 0xFF, 0x00, 0x80),
+        gdSPDefVtxC(0,      8192,  0,      0, 0, 0x00, 0xFF, 0x00, 0x80),
+        gdSPDefVtxC(0,      0,      -8192, 0, 0, 0x00, 0x00, 0xFF, 0x80),
+        gdSPDefVtxC(0,      0,      8192,  0, 0, 0x00, 0x00, 0xFF, 0x80),
+      };
+      load_l3dex2(&z64_ctxt.gfx->poly_xlu.p);
+      gDPPipeSync(z64_ctxt.gfx->poly_xlu.p++);
+      gDPSetCycleType(z64_ctxt.gfx->poly_xlu.p++, G_CYC_1CYCLE);
+      gDPSetRenderMode(z64_ctxt.gfx->poly_xlu.p++,
+                       G_RM_AA_ZB_XLU_LINE, G_RM_AA_ZB_XLU_LINE2);
+      gDPSetCombineMode(z64_ctxt.gfx->poly_xlu.p++,
+                        G_CC_PRIMITIVE, G_CC_PRIMITIVE);
+      gSPLoadGeometryMode(z64_ctxt.gfx->poly_xlu.p++, G_ZBUFFER);
+      gSPTexture(z64_ctxt.gfx->poly_xlu.p++, 0, 0, 0, 0, G_OFF);
+      gSPMatrix(z64_ctxt.gfx->poly_xlu.p++,
+                gDisplayListData(&z64_ctxt.gfx->poly_xlu.d, m),
+                G_MTX_LOAD | G_MTX_NOPUSH | G_MTX_MODELVIEW);
+      gSPVertex(z64_ctxt.gfx->poly_xlu.p++,
+                gDisplayListData(&z64_ctxt.gfx->poly_xlu.d, v), 6, 0);
+      gDPSetPrimColor(z64_ctxt.gfx->poly_xlu.p++,
+                      0, 0, 0xFF, 0x00, 0x00, 0x80);
+      gSPLine3D(z64_ctxt.gfx->poly_xlu.p++, 0, 1, 0);
+      gDPSetPrimColor(z64_ctxt.gfx->poly_xlu.p++,
+                      0, 0, 0x00, 0xFF, 0x00, 0x80);
+      gSPLine3D(z64_ctxt.gfx->poly_xlu.p++, 2, 3, 0);
+      gDPSetPrimColor(z64_ctxt.gfx->poly_xlu.p++,
+                      0, 0, 0x00, 0x00, 0xFF, 0x80);
+      gSPLine3D(z64_ctxt.gfx->poly_xlu.p++, 4, 5, 0);
+      unload_l3dex2(&z64_ctxt.gfx->poly_xlu.p, 1);
+    }
   }
   else
-    gfx_printf(font, x, y + ch * 1, "<none>");
+    strcpy(info->edit_item->text, "<none>");
   return 1;
+}
+
+static void edit_actor_proc(struct menu_item *item, void *data)
+{
+  struct actor_debug_info *info = data;
+  if (info->index < z64_game.actor_list[info->type].length) {
+    z64_actor_t *actor = z64_game.actor_list[info->type].first;
+    for (int i = 0; i < info->index; ++i)
+      actor = actor->next;
+    menu_enter(&menu_main, &menu_mem);
+    mem_goto((uint32_t)actor);
+  }
 }
 
 static void delete_actor_proc(struct menu_item *item, void *data)
@@ -2368,9 +2496,10 @@ static void main_hook(void)
     {
       15, 14, 12, 3, 2, 1, 0, 13, 5, 4, 11, 10, 9, 8,
     };
+    uint16_t z_pad = input_z_pad();
     for (int i = 0; i < sizeof(buttons) / sizeof(*buttons); ++i) {
       int b = buttons[i];
-      if (!(z64_input_direct.raw.pad & (1 << b)))
+      if (!(z_pad & (1 << b)))
         continue;
       int x = (cw - texture->tile_width) / 2 + i * 10;
       int y = -(gfx_font_xheight(font) + texture->tile_height + 1) / 2;
@@ -2429,103 +2558,212 @@ static void main_hook(void)
   menu_draw(&menu_global_watches);
 
   {
-    static Gfx *col_view_disp;
+    static Gfx *poly_disp;
+    static Gfx *line_disp;
     static _Bool xlu;
     /* build collision view display list */
     if (col_view_state == 1) {
       xlu = settings->menu_settings.col_view_xlu;
       z64_col_hdr_t *col_hdr = z64_game.col_hdr;
-      size_t size = 0x10 + 9 * col_hdr->n_poly;
-      if (col_view_disp)
-        free(col_view_disp);
-      col_view_disp = malloc(sizeof(*col_view_disp) * size);
-      Gfx *p = col_view_disp;
-      Gfx *d = col_view_disp + size;
-      gDPPipeSync(p++);
-      gDPSetCycleType(p++, G_CYC_2CYCLE);
-      uint32_t rm;
-      uint32_t blc1;
-      uint32_t blc2;
-      uint8_t alpha;
-      if (xlu) {
-        rm = Z_CMP | IM_RD | CVG_DST_FULL | FORCE_BL;
-        blc1 = GBL_c1(G_BL_CLR_IN, G_BL_A_IN, G_BL_CLR_MEM, G_BL_1MA);
-        blc2 = GBL_c2(G_BL_CLR_IN, G_BL_A_IN, G_BL_CLR_MEM, G_BL_1MA);
-        alpha = 0x80;
-      }
-      else {
-        rm = Z_CMP | Z_UPD | IM_RD | CVG_DST_CLAMP | FORCE_BL;
-        blc1 = GBL_c1(G_BL_CLR_IN, G_BL_0, G_BL_CLR_IN, G_BL_1);
-        blc2 = GBL_c2(G_BL_CLR_IN, G_BL_0, G_BL_CLR_IN, G_BL_1);
-        alpha = 0xFF;
-      }
-      if (settings->menu_settings.col_view_mode == SETTINGS_COLVIEW_DECAL)
-        rm |= ZMODE_DEC;
-      else if (xlu)
-        rm |= ZMODE_XLU;
-      else
-        rm |= ZMODE_OPA;
-      gDPSetRenderMode(p++, rm | blc1, rm | blc2);
-      gDPSetCombineMode(p++, G_CC_PRIMITIVE, G_CC_MODULATERGBA2);
-      gSPTexture(p++, qu016(0.5), qu016(0.5), 0, G_TX_RENDERTILE, G_OFF);
-      gSPLoadGeometryMode(p++, G_SHADE | G_LIGHTING | G_ZBUFFER | G_CULL_BACK);
+      uint8_t alpha = xlu ? 0x80 : 0xFF;
+      /* initialize polygon dlist */
+      Gfx *poly_p = NULL;
+      Gfx *poly_d = NULL;
       {
+        size_t poly_size = 0x10 + 9 * col_hdr->n_poly;
+        if (poly_disp)
+          free(poly_disp);
+        poly_disp = malloc(sizeof(*poly_disp) * poly_size);
+        poly_p = poly_disp;
+        poly_d = poly_disp + poly_size;
+        uint32_t rm;
+        uint32_t blc1;
+        uint32_t blc2;
+        if (xlu) {
+          rm = Z_CMP | IM_RD | CVG_DST_FULL | FORCE_BL;
+          blc1 = GBL_c1(G_BL_CLR_IN, G_BL_A_IN, G_BL_CLR_MEM, G_BL_1MA);
+          blc2 = GBL_c2(G_BL_CLR_IN, G_BL_A_IN, G_BL_CLR_MEM, G_BL_1MA);
+        }
+        else {
+          rm = Z_CMP | Z_UPD | IM_RD | CVG_DST_CLAMP | FORCE_BL;
+          blc1 = GBL_c1(G_BL_CLR_IN, G_BL_0, G_BL_CLR_IN, G_BL_1);
+          blc2 = GBL_c2(G_BL_CLR_IN, G_BL_0, G_BL_CLR_IN, G_BL_1);
+        }
+        if (settings->menu_settings.col_view_mode == SETTINGS_COLVIEW_DECAL)
+          rm |= ZMODE_DEC;
+        else if (xlu)
+          rm |= ZMODE_XLU;
+        else
+          rm |= ZMODE_OPA;
+        gDPPipeSync(poly_p++);
+        gDPSetRenderMode(poly_p++, rm | blc1, rm | blc2);
+        gSPTexture(poly_p++, qu016(0.5), qu016(0.5), 0, G_TX_RENDERTILE, G_OFF);
+        if (settings->menu_settings.col_view_shade) {
+          gDPSetCycleType(poly_p++, G_CYC_2CYCLE);
+          gDPSetCombineMode(poly_p++, G_CC_PRIMITIVE, G_CC_MODULATERGBA2);
+          gSPLoadGeometryMode(poly_p++,
+                              G_SHADE | G_LIGHTING | G_ZBUFFER | G_CULL_BACK);
+        }
+        else {
+          gDPSetCycleType(poly_p++, G_CYC_1CYCLE);
+          gDPSetCombineMode(poly_p++, G_CC_PRIMITIVE, G_CC_PRIMITIVE);
+          gSPLoadGeometryMode(poly_p++, G_ZBUFFER | G_CULL_BACK);
+        }
         Mtx m;
         guMtxIdent(&m);
-        gSPMatrix(p++, gDisplayListData(&d, m), G_MTX_MODELVIEW | G_MTX_LOAD);
+        gSPMatrix(poly_p++,
+                  gDisplayListData(&poly_d, m), G_MTX_MODELVIEW | G_MTX_LOAD);
       }
+      /* initialize line dlist */
+      struct line
+      {
+        int va;
+        int vb;
+      };
+      struct vector line_set;
+      Gfx *line_p = NULL;
+      Gfx *line_d = NULL;
+      if (settings->menu_settings.col_view_line) {
+        vector_init(&line_set, sizeof(struct line));
+        size_t line_size = 0x18 + 11 * col_hdr->n_poly;
+        if (line_disp)
+          free(line_disp);
+        line_disp = malloc(sizeof(*line_disp) * line_size);
+        line_p = line_disp;
+        line_d = line_disp + line_size;
+        load_l3dex2(&line_p);
+        gDPPipeSync(line_p++);
+        if (xlu)
+          gDPSetRenderMode(line_p++, G_RM_AA_ZB_XLU_LINE, G_RM_AA_ZB_XLU_LINE2);
+        else
+          gDPSetRenderMode(line_p++, G_RM_AA_ZB_DEC_LINE, G_RM_AA_ZB_DEC_LINE2);
+        gSPTexture(line_p++, qu016(0.5), qu016(0.5), 0, G_TX_RENDERTILE, G_OFF);
+        gDPSetCycleType(line_p++, G_CYC_1CYCLE);
+        gDPSetCombineMode(line_p++, G_CC_PRIMITIVE, G_CC_PRIMITIVE);
+        gSPLoadGeometryMode(line_p++, G_ZBUFFER);
+        Mtx m;
+        guMtxIdent(&m);
+        gSPMatrix(line_p++,
+                  gDisplayListData(&line_d, m), G_MTX_MODELVIEW | G_MTX_LOAD);
+        gDPSetPrimColor(line_p++, 0, 0, 0x00, 0x00, 0x00, alpha);
+      }
+      /* enumerate collision polys */
       for (int i = 0; i < col_hdr->n_poly; ++i) {
         z64_col_poly_t *poly = &col_hdr->poly[i];
         z64_col_type_t *type = &col_hdr->type[poly->type];
-        if (type->flags_2.hookshot)
-          gDPSetPrimColor(p++, 0, 0, 0x80, 0x80, 0xFF, alpha);
-        else if (type->flags_1.interaction > 0x01)
-          gDPSetPrimColor(p++, 0, 0, 0xC0, 0x00, 0xC0, alpha);
-        else if (type->flags_1.special == 0x0C)
-          gDPSetPrimColor(p++, 0, 0, 0xFF, 0x00, 0x00, alpha);
-        else if (type->flags_1.exit != 0x00 || type->flags_1.special == 0x05)
-          gDPSetPrimColor(p++, 0, 0, 0x00, 0xFF, 0x00, alpha);
-        else if (type->flags_1.behavior != 0 || type->flags_2.wall_damage)
-          gDPSetPrimColor(p++, 0, 0, 0xC0, 0xFF, 0xC0, alpha);
-        else if (type->flags_2.terrain == 0x01)
-          gDPSetPrimColor(p++, 0, 0, 0xFF, 0xFF, 0x80, alpha);
-        else if (settings->menu_settings.col_view_rd)
-          continue;
-        else
-          gDPSetPrimColor(p++, 0, 0, 0xFF, 0xFF, 0xFF, alpha);
         z64_xyz_t *va = &col_hdr->vtx[poly->va];
         z64_xyz_t *vb = &col_hdr->vtx[poly->vb];
         z64_xyz_t *vc = &col_hdr->vtx[poly->vc];
-        Vtx vg[3] =
-        {
-          gdSPDefVtxN(va->x, va->y, va->z, 0, 0,
-                      poly->norm.x / 0x100, poly->norm.y / 0x100,
-                      poly->norm.z / 0x100, 0xFF),
-          gdSPDefVtxN(vb->x, vb->y, vb->z, 0, 0,
-                      poly->norm.x / 0x100, poly->norm.y / 0x100,
-                      poly->norm.z / 0x100, 0xFF),
-          gdSPDefVtxN(vc->x, vc->y, vc->z, 0, 0,
-                      poly->norm.x / 0x100, poly->norm.y / 0x100,
-                      poly->norm.z / 0x100, 0xFF),
-        };
-        gSPVertex(p++, gDisplayListData(&d, vg), 3, 0);
-        gSP1Triangle(p++, 0, 1, 2, 0);
+        /* generate polygon */
+        _Bool skip = 0;
+        if (type->flags_2.hookshot)
+          gDPSetPrimColor(poly_p++, 0, 0, 0x80, 0x80, 0xFF, alpha);
+        else if (type->flags_1.interaction > 0x01)
+          gDPSetPrimColor(poly_p++, 0, 0, 0xC0, 0x00, 0xC0, alpha);
+        else if (type->flags_1.special == 0x0C)
+          gDPSetPrimColor(poly_p++, 0, 0, 0xFF, 0x00, 0x00, alpha);
+        else if (type->flags_1.exit != 0x00 || type->flags_1.special == 0x05)
+          gDPSetPrimColor(poly_p++, 0, 0, 0x00, 0xFF, 0x00, alpha);
+        else if (type->flags_1.behavior != 0 || type->flags_2.wall_damage)
+          gDPSetPrimColor(poly_p++, 0, 0, 0xC0, 0xFF, 0xC0, alpha);
+        else if (type->flags_2.terrain == 0x01)
+          gDPSetPrimColor(poly_p++, 0, 0, 0xFF, 0xFF, 0x80, alpha);
+        else if (settings->menu_settings.col_view_rd)
+          skip = 1;
+        else
+          gDPSetPrimColor(poly_p++, 0, 0, 0xFF, 0xFF, 0xFF, alpha);
+        if (!skip) {
+          Vtx pvg[3] =
+          {
+            gdSPDefVtxN(va->x, va->y, va->z, 0, 0,
+                        poly->norm.x / 0x100, poly->norm.y / 0x100,
+                        poly->norm.z / 0x100, 0xFF),
+            gdSPDefVtxN(vb->x, vb->y, vb->z, 0, 0,
+                        poly->norm.x / 0x100, poly->norm.y / 0x100,
+                        poly->norm.z / 0x100, 0xFF),
+            gdSPDefVtxN(vc->x, vc->y, vc->z, 0, 0,
+                        poly->norm.x / 0x100, poly->norm.y / 0x100,
+                        poly->norm.z / 0x100, 0xFF),
+          };
+          gSPVertex(poly_p++, gDisplayListData(&poly_d, pvg), 3, 0);
+          gSP1Triangle(poly_p++, 0, 1, 2, 0);
+        }
+        /* generate lines */
+        if (settings->menu_settings.col_view_line) {
+          struct line lab = {poly->va, poly->vb};
+          struct line lbc = {poly->vb, poly->vc};
+          struct line lca = {poly->vc, poly->va};
+          _Bool ab = 1;
+          _Bool bc = 1;
+          _Bool ca = 1;
+          for (int i = 0; i < line_set.size; ++i) {
+            struct line *l = vector_at(&line_set, i);
+            if ((l->va == lab.va && l->vb == lab.vb) ||
+                (l->va == lab.vb && l->vb == lab.va))
+              ab = 0;
+            if ((l->va == lbc.va && l->vb == lbc.vb) ||
+                (l->va == lbc.vb && l->vb == lbc.va))
+              bc = 0;
+            if ((l->va == lca.va && l->vb == lca.vb) ||
+                (l->va == lca.vb && l->vb == lca.va))
+              ca = 0;
+          }
+          if (!ab && !bc && !ca)
+            continue;
+          Vtx lvg[3] =
+          {
+            gdSPDefVtxC(va->x, va->y, va->z, 0, 0, 0x00, 0x00, 0x00, 0xFF),
+            gdSPDefVtxC(vb->x, vb->y, vb->z, 0, 0, 0x00, 0x00, 0x00, 0xFF),
+            gdSPDefVtxC(vc->x, vc->y, vc->z, 0, 0, 0x00, 0x00, 0x00, 0xFF),
+          };
+          gSPVertex(line_p++, gDisplayListData(&line_d, lvg), 3, 0);
+          if (ab) {
+            vector_push_back(&line_set, 1, &lab);
+            gSPLine3D(line_p++, 0, 1, 0);
+          }
+          if (bc) {
+            vector_push_back(&line_set, 1, &lbc);
+            gSPLine3D(line_p++, 1, 2, 0);
+          }
+          if (ca) {
+            vector_push_back(&line_set, 1, &lca);
+            gSPLine3D(line_p++, 2, 0, 0);
+          }
+        }
       }
-      gSPEndDisplayList(p++);
+      /* finalize dlists */
+      gSPEndDisplayList(poly_p++);
+      if (settings->menu_settings.col_view_line) {
+        vector_destroy(&line_set);
+        unload_l3dex2(&line_p, 1);
+        gSPEndDisplayList(line_p++);
+      }
       col_view_state = 2;
     }
-    if (col_view_state == 2 && col_view_disp && z64_game.pause_state == 0) {
-      if (xlu)
-        gSPDisplayList(z64_ctxt.gfx->poly_xlu.p++, col_view_disp);
-      else
-        gSPDisplayList(z64_ctxt.gfx->poly_opa.p++, col_view_disp);
+    if (col_view_state == 2 && z64_game.pause_state == 0) {
+      if (xlu) {
+        if (poly_disp)
+          gSPDisplayList(z64_ctxt.gfx->poly_xlu.p++, poly_disp);
+        if (line_disp)
+          gSPDisplayList(z64_ctxt.gfx->poly_xlu.p++, line_disp);
+      }
+      else {
+        if (poly_disp)
+          gSPDisplayList(z64_ctxt.gfx->poly_opa.p++, poly_disp);
+        if (line_disp)
+          gSPDisplayList(z64_ctxt.gfx->poly_opa.p++, line_disp);
+      }
     }
     if (col_view_state == 3)
       col_view_state = 4;
     else if (col_view_state == 4) {
-      if (col_view_disp) {
-        free(col_view_disp);
-        col_view_disp = NULL;
+      if (poly_disp) {
+        free(poly_disp);
+        poly_disp = NULL;
+      }
+      if (line_disp) {
+        free(line_disp);
+        line_disp = NULL;
       }
       col_view_state = 0;
     }
@@ -2536,8 +2774,11 @@ static void main_hook(void)
     if (splash_time > 0) {
       --splash_time;
       gfx_mode_set(GFX_MODE_COLOR, GPACK_RGBA8888(0xC0, 0x00, 0x00, alpha));
-      gfx_printf(font, 16, Z64_SCREEN_HEIGHT - 6 - ch,
-                 "gz-0.3.2 github.com/glankk/gz");
+      const char *tarname = STRINGIZE(PACKAGE_TARNAME);
+      const char *url = STRINGIZE(PACKAGE_URL);
+      gfx_printf(font, 16, Z64_SCREEN_HEIGHT - 6 - ch, tarname);
+      gfx_printf(font, Z64_SCREEN_WIDTH - 12 - cw * strlen(url),
+                 Z64_SCREEN_HEIGHT - 6 - ch, url);
       static struct gfx_texture *logo_texture = NULL;
       if (!logo_texture)
         logo_texture = resource_load_grc_texture("logo");
@@ -2562,10 +2803,7 @@ static void main_hook(void)
 HOOK void entrance_offset_hook(void)
 {
   init_gp();
-  uint32_t at;
   uint32_t offset;
-  __asm__ volatile (".set noat  \n"
-                    "sw $at, %0 \n" : "=m"(at));
   if (z64_file.void_flag && z64_file.cutscene_index == 0x0000)
     entrance_override_once = entrance_override_next;
   if (entrance_override_once) {
@@ -2578,34 +2816,35 @@ HOOK void entrance_offset_hook(void)
     entrance_override_next = 0;
   }
   next_entrance = -1;
-  __asm__ volatile ("lw $v1, %0 \n"
-                    "lw $at, %1 \n" :: "m"(offset), "m"(at));
+  __asm__ volatile (".set noat  \n"
+                    "lw $v1, %0 \n"
+                    "la $at, %1 \n" :: "m"(offset), "i"(0x51));
 }
 
-HOOK void update_hook(z64_ctxt_t *ctxt)
+HOOK void update_hook(void)
 {
   init_gp();
   void (*frame_update_func)(z64_ctxt_t *ctxt);
   frame_update_func = (void*)z64_frame_update_func_addr;
   if (!gz_ready)
-    frame_update_func(ctxt);
+    frame_update_func(&z64_ctxt);
   else if (frames_queued != 0) {
     if (frames_queued > 0)
       --frames_queued;
-    frame_update_func(ctxt);
+    frame_update_func(&z64_ctxt);
   }
 }
 
-HOOK void input_hook(z64_ctxt_t *ctxt)
+HOOK void input_hook(void)
 {
   init_gp();
   void (*frame_input_func)(z64_ctxt_t *ctxt);
   frame_input_func = (void*)z64_frame_input_func_addr;
   if (!gz_ready)
-    frame_input_func(ctxt);
+    frame_input_func(&z64_ctxt);
   else if (frames_queued != 0) {
     z64_input_t input = z64_input_direct;
-    frame_input_func(ctxt);
+    frame_input_func(&z64_ctxt);
     if (movie_state == MOVIE_RECORDING)
       vector_push_back(&movie_inputs, 1, &z64_ctxt.input[0]);
     else if (movie_state == MOVIE_PLAYING) {
@@ -2685,7 +2924,7 @@ static void init(void)
   }
 
   /* load settings */
-  if (z64_input_direct.raw.pad == BUTTON_START || !settings_load(profile))
+  if (input_z_pad() == BUTTON_START || !settings_load(profile))
     settings_load_default();
   input_update();
 
@@ -2812,28 +3051,32 @@ static void init(void)
                     col_view_mode_proc, NULL);
     menu_add_static(&menu_scene, 2, 8, "translucent", 0xC0C0C0);
     menu_add_checkbox(&menu_scene, 16, 8, col_view_xlu_proc, NULL);
-    menu_add_static(&menu_scene, 2, 9, "reduced", 0xC0C0C0);
-    menu_add_checkbox(&menu_scene, 16, 9, col_view_rd_proc, NULL);
+    menu_add_static(&menu_scene, 2, 9, "wireframe", 0xC0C0C0);
+    menu_add_checkbox(&menu_scene, 16, 9, col_view_line_proc, NULL);
+    menu_add_static(&menu_scene, 2, 10, "shaded", 0xC0C0C0);
+    menu_add_checkbox(&menu_scene, 16, 10, col_view_shade_proc, NULL);
+    menu_add_static(&menu_scene, 2, 11, "reduced", 0xC0C0C0);
+    menu_add_checkbox(&menu_scene, 16, 11, col_view_rd_proc, NULL);
     {
       static struct slot_info teleport_slot_info;
       teleport_slot_info.data = &settings->teleport_slot;
       teleport_slot_info.max = SETTINGS_TELEPORT_MAX;
-      menu_add_static(&menu_scene, 0, 10, "teleport slot", 0xC0C0C0);
-      menu_add_watch(&menu_scene, 18, 10,
+      menu_add_static(&menu_scene, 0, 12, "teleport slot", 0xC0C0C0);
+      menu_add_watch(&menu_scene, 18, 12,
                      (uint32_t)teleport_slot_info.data, WATCH_TYPE_U8);
-      menu_add_button(&menu_scene, 16, 10, "-",
+      menu_add_button(&menu_scene, 16, 12, "-",
                       slot_dec_proc, &teleport_slot_info);
-      menu_add_button(&menu_scene, 20, 10, "+",
+      menu_add_button(&menu_scene, 20, 12, "+",
                       slot_inc_proc, &teleport_slot_info);
     }
-    menu_add_static(&menu_scene, 0, 11, "current scene", 0xC0C0C0);
-    menu_add_watch(&menu_scene, 16, 11,
-                   (uint32_t)&z64_game.scene_index, WATCH_TYPE_U16);
-    menu_add_static(&menu_scene, 0, 12, "current room", 0xC0C0C0);
-    menu_add_watch(&menu_scene, 16, 12,
-                   (uint32_t)&z64_game.room_index, WATCH_TYPE_U8);
-    menu_add_static(&menu_scene, 0, 13, "no. rooms", 0xC0C0C0);
+    menu_add_static(&menu_scene, 0, 13, "current scene", 0xC0C0C0);
     menu_add_watch(&menu_scene, 16, 13,
+                   (uint32_t)&z64_game.scene_index, WATCH_TYPE_U16);
+    menu_add_static(&menu_scene, 0, 14, "current room", 0xC0C0C0);
+    menu_add_watch(&menu_scene, 16, 14,
+                   (uint32_t)&z64_game.room_index, WATCH_TYPE_U8);
+    menu_add_static(&menu_scene, 0, 15, "no. rooms", 0xC0C0C0);
+    menu_add_watch(&menu_scene, 16, 15,
                    (uint32_t)&z64_game.n_rooms, WATCH_TYPE_U8);
 
     /* cheats */
@@ -2968,7 +3211,7 @@ static void init(void)
                                     NULL, NULL);
           item->pxoffset = 76 + i * 18;
           item->pyoffset = 72;
-          char *tooltip = malloc(9);
+          char *tooltip = malloc(20);
           sprintf(tooltip, "bottle %d", i + 1);
           item->tooltip = tooltip;
         }
@@ -3273,14 +3516,17 @@ static void init(void)
                     "inactive\0""heat starting\0""heat initial\0"
                     "heat moving\0""heat active\0""race starting\0"
                     "race initial\0""race moving\0""race active\0"
-                    "race stopped\0""race ending\0",
+                    "race stopped\0""race ending\0""timer starting\0"
+                    "timer initial\0""timer moving\0""timer active\0"
+                    "timer stopped\0",
                     halfword_optionmod_proc, &z64_file.timer_1_state);
     menu_add_static(&menu_file, 0, 9, "timer 2", 0xC0C0C0);
     menu_add_intinput(&menu_file, 17, 9, 10, 5,
                       halfword_mod_proc, &z64_file.timer_2_value);
     menu_add_option(&menu_file, 23, 9,
-                    "inactive\0""starting\0""initial\0"
-                    "moving\0""active\0""stopped\0",
+                    "inactive\0""starting\0""initial\0""moving\0""active\0"
+                    "stopped\0""ending\0""timer starting\0""timer initial\0"
+                    "timer moving\0""timer active\0""timer stopped\0",
                     halfword_optionmod_proc, &z64_file.timer_2_state);
     menu_add_static(&menu_file, 0, 10, "file index", 0xC0C0C0);
     menu_add_intinput(&menu_file, 17, 10, 16, 2,
@@ -3372,8 +3618,11 @@ static void init(void)
         item->data = &data;
         menu_add_static(&actors, 0, 2, "index", 0xC0C0C0);
         menu_add_button(&actors, 10, 2, "<", actor_index_dec_proc, &data);
-        menu_add_watch(&actors, 12, 2, (uint32_t)&data.index, WATCH_TYPE_U8);
-        menu_add_button(&actors, 15, 2, ">", actor_index_inc_proc, &data);
+        menu_add_button(&actors, 12, 2, ">", actor_index_inc_proc, &data);
+        item = menu_add_button(&actors, 0, 3, NULL, &edit_actor_proc, &data);
+        item->text = malloc(9);
+        item->text[0] = 0;
+        data.edit_item = item;
         menu_add_button(&actors, 0, 5, "delete", &delete_actor_proc, &data);
         menu_add_button(&actors, 10, 5, "go to", &goto_actor_proc, &data);
       }
@@ -3401,9 +3650,8 @@ static void init(void)
     static struct menu flags;
     menu_add_submenu(&menu_debug, 0, 5, &flags, "flags");
     flag_menu_create(&flags);
-    static struct menu mem;
-    menu_add_submenu(&menu_debug, 0, 6, &mem, "memory");
-    mem_menu_create(&mem);
+    menu_add_submenu(&menu_debug, 0, 6, &menu_mem, "memory");
+    mem_menu_create(&menu_mem);
 
     /* settings */
     menu_init(&menu_settings, MENU_NOVALUE, MENU_NOVALUE, MENU_NOVALUE);

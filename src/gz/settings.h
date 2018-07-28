@@ -88,6 +88,7 @@ enum commands
   COMMAND_NEXTPOS,
   COMMAND_PREVFILE,
   COMMAND_NEXTFILE,
+  COMMAND_COLVIEW,
   COMMAND_RECORDMACRO,
   COMMAND_PLAYMACRO,
   COMMAND_PREVROOM,
@@ -123,6 +124,8 @@ struct menu_settings
 #endif
   uint32_t col_view_mode  : 1;
   uint32_t col_view_xlu   : 1;
+  uint32_t col_view_line  : 1;
+  uint32_t col_view_shade : 1;
   uint32_t col_view_rd    : 1;
 };
 

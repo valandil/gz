@@ -53,6 +53,8 @@ void settings_load_default(void)
 #endif
   d->menu_settings.col_view_mode = SETTINGS_COLVIEW_DECAL;
   d->menu_settings.col_view_xlu = 1;
+  d->menu_settings.col_view_line = 0;
+  d->menu_settings.col_view_shade = 1;
   d->menu_settings.col_view_rd = 0;
   d->menu_x = 16;
   d->menu_y = 64;
@@ -76,7 +78,11 @@ void settings_load_default(void)
   d->warp_entrance = 0;
   d->binds[COMMAND_MENU] = input_bind_make(2, BUTTON_R, BUTTON_L);
   d->binds[COMMAND_RETURN] = input_bind_make(2, BUTTON_R, BUTTON_D_LEFT);
+#ifndef WIIVC
   d->binds[COMMAND_BREAK] = input_bind_make(2, BUTTON_C_UP, BUTTON_L);
+#else
+  d->binds[COMMAND_BREAK] = input_bind_make(2, BUTTON_START, BUTTON_L);
+#endif
   d->binds[COMMAND_LEVITATE] = input_bind_make(1, BUTTON_L);
   d->binds[COMMAND_SAVEPOS] = input_bind_make(1, BUTTON_D_LEFT);
   d->binds[COMMAND_LOADPOS] = input_bind_make(1, BUTTON_D_RIGHT);
@@ -109,6 +115,7 @@ void settings_load_default(void)
   d->binds[COMMAND_NEXTPOS] = input_bind_make(0);
   d->binds[COMMAND_PREVFILE] = input_bind_make(0);
   d->binds[COMMAND_NEXTFILE] = input_bind_make(0);
+  d->binds[COMMAND_COLVIEW] = input_bind_make(0);
   d->binds[COMMAND_RECORDMACRO] = input_bind_make(0);
   d->binds[COMMAND_PLAYMACRO] = input_bind_make(0);
   d->binds[COMMAND_PREVROOM] = input_bind_make(2, BUTTON_R, BUTTON_D_DOWN);
