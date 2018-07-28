@@ -70,7 +70,8 @@ void gfx_start(void)
 void gfx_mode_init(void)
 {
   gfx_sync();
-  gSPLoadGeometryMode(gfx_disp_p++, 0);
+  gSPClearGeometryMode(gfx_disp_p++, G_ZBUFFER | G_SHADE | G_SHADING_SMOOTH |
+                       G_CULL_BOTH | G_FOG | G_LIGHTING);
   gDPSetCycleType(gfx_disp_p++, G_CYC_1CYCLE);
   gDPSetRenderMode(gfx_disp_p++, G_RM_XLU_SURF, G_RM_XLU_SURF2);
   gDPSetScissor(gfx_disp_p++, G_SC_NON_INTERLACE,
@@ -194,7 +195,7 @@ void gfx_flush()
 {
   flush_chars();
   gSPEndDisplayList(gfx_disp_p++);
-  gSPDisplayList(SM64_gDisplayListHead++,MIPS_KSEG0_TO_PHYS(gfx_disp));
+  gSPDisplayList(SM64_gDisplayListHead++,gfx_disp);
   Gfx *disp_w = gfx_disp_w;
   gfx_disp_w = gfx_disp;
   gfx_disp = disp_w;
