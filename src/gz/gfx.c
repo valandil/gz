@@ -8,7 +8,7 @@
 #include "gfx.h"
 #include "z64.h"
 #include "zu.h"
-#include "../../../sm64.h"
+#include "src/sm64.h"
 
 #define           GFX_DISP_SIZE     0x10000
 static Gfx       *gfx_disp;
