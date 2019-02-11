@@ -8,12 +8,15 @@
 #define SETTINGS_MAXSIZE            (0x8000-(SETTINGS_ADDRESS))
 #define SETTINGS_PADSIZE            ((sizeof(struct settings)+1)/2*2)
 #define SETTINGS_PROFILE_MAX        ((SETTINGS_MAXSIZE)/(SETTINGS_PADSIZE))
-#define SETTINGS_VERSION            0x0001
+#define SETTINGS_VERSION            0x0002
+#define SETTINGS_STATE_VERSION      0x0002
 
 #define SETTINGS_WATCHES_MAX        18
 #define SETTINGS_TELEPORT_MAX       9
 #define SETTINGS_MEMFILE_MAX        10
+#define SETTINGS_STATE_MAX          3
 #define SETTINGS_BIND_MAX           COMMAND_MAX
+#define SETTINGS_LOG_MAX            4
 
 #define SETTINGS_LAG_FRAMES         0
 #define SETTINGS_LAG_SECONDS        1
@@ -60,39 +63,39 @@ enum commands
   COMMAND_RETURN,
   COMMAND_BREAK,
   COMMAND_LEVITATE,
-  COMMAND_SAVEPOS,
-  COMMAND_LOADPOS,
+  COMMAND_FALL,
+  COMMAND_TURBO,
+  COMMAND_FILESELECT,
+  COMMAND_RELOAD,
+  COMMAND_VOID,
+  COMMAND_AGE,
+  COMMAND_SAVESTATE,
+  COMMAND_LOADSTATE,
   COMMAND_SAVEMEMFILE,
   COMMAND_LOADMEMFILE,
+  COMMAND_SAVEPOS,
+  COMMAND_LOADPOS,
+  COMMAND_PREVSTATE,
+  COMMAND_NEXTSTATE,
+  COMMAND_PREVFILE,
+  COMMAND_NEXTFILE,
+  COMMAND_PREVPOS,
+  COMMAND_NEXTPOS,
+  COMMAND_PAUSE,
+  COMMAND_ADVANCE,
+  COMMAND_RECORDMACRO,
+  COMMAND_PLAYMACRO,
+  COMMAND_COLVIEW,
+  COMMAND_PREVROOM,
+  COMMAND_NEXTROOM,
   COMMAND_RESETLAG,
 #ifndef WIIVC
   COMMAND_TIMER,
   COMMAND_RESETTIMER,
-#endif
-  COMMAND_PAUSE,
-  COMMAND_ADVANCE,
-  COMMAND_FILESELECT,
-  COMMAND_RELOAD,
-  COMMAND_VOID,
-#ifndef WIIVC
-  COMMAND_RESET,
-#endif
-  COMMAND_TURBO,
-  COMMAND_FALL,
-  COMMAND_AGE,
-#ifndef WIIVC
   COMMAND_STARTTIMER,
   COMMAND_STOPTIMER,
+  COMMAND_RESET,
 #endif
-  COMMAND_PREVPOS,
-  COMMAND_NEXTPOS,
-  COMMAND_PREVFILE,
-  COMMAND_NEXTFILE,
-  COMMAND_COLVIEW,
-  COMMAND_RECORDMACRO,
-  COMMAND_PLAYMACRO,
-  COMMAND_PREVROOM,
-  COMMAND_NEXTROOM,
   COMMAND_MAX,
 };
 
@@ -103,11 +106,12 @@ struct watch_info
   uint8_t position_set  : 1;
 };
 
-struct menu_settings
+struct settings_bits
 {
   uint32_t font_resource  : 4;
   uint32_t drop_shadow    : 1;
   uint32_t input_display  : 1;
+  uint32_t log            : 1;
   uint32_t lag_counter    : 1;
   uint32_t lag_unit       : 1;
 #ifndef WIIVC
@@ -136,11 +140,13 @@ struct settings_data
   uint32_t              watch_address[SETTINGS_WATCHES_MAX];
   uint32_t              cheats;
   z64_angle_t           teleport_rot[SETTINGS_TELEPORT_MAX];
-  struct menu_settings  menu_settings;
+  struct settings_bits  bits;
   int16_t               menu_x;
   int16_t               menu_y;
   int16_t               input_display_x;
   int16_t               input_display_y;
+  int16_t               log_x;
+  int16_t               log_y;
   int16_t               lag_counter_x;
   int16_t               lag_counter_y;
 #ifndef WIIVC

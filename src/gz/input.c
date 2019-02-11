@@ -8,22 +8,24 @@
 #include "settings.h"
 #include "z64.h"
 
-#define         BIND_END 6
-static uint16_t pad = 0;
-static int      button_time[16] = {0};
-static uint16_t pad_pressed_raw;
-static uint16_t pad_pressed;
-static uint16_t pad_released;
-static _Bool    reservation_enabled;
-static uint16_t pad_reserved;
-static int      button_reserve_count[16] = {0};
-static int      bind_component_state[COMMAND_MAX] = {0};
-static int      bind_time[COMMAND_MAX] = {0};
-static _Bool    bind_pressed_raw[COMMAND_MAX];
-static _Bool    bind_pressed[COMMAND_MAX];
-static _Bool    bind_disable[COMMAND_MAX] = {0};
-static _Bool    bind_override[COMMAND_MAX] = {0};
-static _Bool    input_enabled = 1;
+#define           BIND_END 6
+static int8_t     joy_x;
+static int8_t     joy_y;
+static uint16_t   pad;
+static int        button_time[16];
+static uint16_t   pad_pressed_raw;
+static uint16_t   pad_pressed;
+static uint16_t   pad_released;
+static _Bool      reservation_enabled;
+static uint16_t   pad_reserved;
+static int        button_reserve_count[16];
+static int        bind_component_state[COMMAND_MAX];
+static int        bind_time[COMMAND_MAX];
+static _Bool      bind_pressed_raw[COMMAND_MAX];
+static _Bool      bind_pressed[COMMAND_MAX];
+static _Bool      bind_disable[COMMAND_MAX];
+static _Bool      bind_override[COMMAND_MAX];
+static _Bool      input_enabled = 1;
 
 static int bind_get_component(uint16_t bind, int index)
 {
@@ -72,6 +74,8 @@ const uint32_t input_button_color[] =
 
 void input_update(void)
 {
+  joy_x = z64_input_direct.raw.x;
+  joy_y = z64_input_direct.raw.y;
   uint16_t z_pad = input_z_pad();
   pad_pressed_raw = (pad ^ z_pad) & z_pad;
   pad_released = (pad ^ z_pad) & ~z_pad;
@@ -97,8 +101,11 @@ void input_update(void)
     if (!input_enabled || bind_disable[i] ||
         (reservation_enabled && !bind_override[i] &&
         (pad_reserved & bind_pad[i])))
+    {
       *cs = 0;
+    }
     else {
+      int css = *cs;
       for (j = 0; j < 4; ++j) {
         c = bind_get_component(*b, j);
         if (c == BIND_END)
@@ -115,7 +122,9 @@ void input_update(void)
             break;
           }
         }
-        if ((pad_released & (1 << c)) || (pad_pressed_raw & ~bind_pad[i])) {
+        if ((pad_released & (1 << c)) ||
+            (css != 0 && (pad_pressed_raw & ~bind_pad[i])))
+        {
           *cs = 0;
           break;
         }
@@ -151,6 +160,16 @@ void input_update(void)
 uint16_t input_z_pad(void)
 {
   return z64_input_direct.raw.pad | input_sch_pad;
+}
+
+int8_t input_x(void)
+{
+  return joy_x;
+}
+
+int8_t input_y(void)
+{
+  return joy_y;
 }
 
 uint16_t input_pad(void)
@@ -310,13 +329,15 @@ static int draw_proc(struct menu_item *item,
   int y = draw_params->y - (gfx_font_xheight(draw_params->font) +
                             texture->tile_height + 1) / 2;
   uint16_t b = settings->binds[data->bind_index];
-  gfx_mode_set(GFX_MODE_COLOR, (draw_params->color << 8) | draw_params->alpha);
+  gfx_mode_set(GFX_MODE_COLOR, GPACK_RGB24A8(draw_params->color,
+                                             draw_params->alpha));
   for (int i = 0; i < 4; ++i) {
     uint16_t c = bind_get_component(b, i);
     if (c == BIND_END) {
-      if (i == 0)
+      if (i == 0) {
         gfx_printf(draw_params->font, draw_params->x, draw_params->y,
                    "unbound");
+      }
       break;
     }
     struct gfx_sprite sprite =
@@ -325,9 +346,10 @@ static int draw_proc(struct menu_item *item,
       x + i * 10, y,
       1.f, 1.f,
     };
-    if (item->owner->selector != item)
-      gfx_mode_set(GFX_MODE_COLOR, (input_button_color[c] << 8) |
-                   draw_params->alpha);
+    if (item->owner->selector != item) {
+      gfx_mode_set(GFX_MODE_COLOR, GPACK_RGB24A8(input_button_color[c],
+                                                 draw_params->alpha));
+    }
     gfx_sprite_draw(&sprite);
   }
   return 1;

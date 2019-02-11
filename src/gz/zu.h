@@ -83,9 +83,25 @@ struct zu_gfx
   z64_disp_buf_t  z_overlay;
 };
 
+struct zu_disp_p
+{
+  uint32_t        work_p;
+  uint32_t        work_d;
+  uint32_t        poly_opa_p;
+  uint32_t        poly_opa_d;
+  uint32_t        poly_xlu_p;
+  uint32_t        poly_xlu_d;
+  uint32_t        overlay_p;
+  uint32_t        overlay_d;
+};
+
 void *zu_seg_locate(const z64_stab_t *stab, uint32_t seg_addr);
 void *zu_zseg_locate(uint32_t seg_addr);
+void *zu_seg_relocate(void *p_seg_addr, const z64_stab_t *stab);
+void *zu_zseg_relocate(void *p_seg_addr);
+
 void zu_getfile(uint32_t vrom_addr, void *dram_addr, size_t size);
+void zu_getfile_idx(int file_idx, void *dram_addr);
 
 void *zu_sr_header(void *sr, int header_index, const z64_stab_t *stab);
 void zu_scene_rooms(const void *scene, struct zu_file *ftab, int ftab_size,
@@ -110,8 +126,9 @@ void zu_void(void);
 
 void zu_execute_game(int16_t entrance_index, uint16_t cutscene_index);
 void zu_execute_filemenu(void);
+_Bool zu_in_game(void);
 
-void zu_setmusic(uint32_t command);
+void zu_audio_cmd(uint32_t cmd);
 
 void zu_set_event_flag(int flag_index);
 void zu_clear_event_flag(int flag_index);
@@ -121,6 +138,10 @@ void zu_gfx_destroy(struct zu_gfx *gfx);
 void zu_gfx_inject(struct zu_gfx *gfx);
 void zu_gfx_restore(struct zu_gfx *gfx);
 Gfx *zu_gfx_flush(struct zu_gfx *gfx);
+
+void zu_reloc_gfx(int src_gfx_idx, int src_cimg_idx);
+void zu_save_disp_p(struct zu_disp_p *disp_p);
+void zu_load_disp_p(struct zu_disp_p *disp_p);
 
 extern struct zu_scene_info zu_scene_info[];
 

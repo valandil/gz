@@ -26,9 +26,23 @@ local data_loc =
 }
 
 local arg = {...}
+local opt_y = false
+if arg[1] == "-y" then
+  opt_y = true
+  table.remove(arg, 1)
+end
+
+function quit(code)
+  if not opt_y then
+    print("press enter to continue")
+    io.read()
+  end
+  os.exit(code)
+end
+
 if #arg < 2 then
-  print("usage: `inject_ucode <dst-file> <src-file>`")
-  return
+  print("usage: `inject_ucode [-y] <dst-file> <src-file>`")
+  quit(1)
 end
 local dst = gru.n64rom_load(arg[1])
 local src = gru.n64rom_load(arg[2])
@@ -49,10 +63,11 @@ for i=1,2 do
   arg[1], arg[2] = arg[2], arg[1]
 end
 if text_insert then
-  print(string.format("found text insertion point at 0x%08X in `%s`", text_insert, arg[1]))
+  print(string.format("found text insertion point at 0x%08X in `%s`",
+                      text_insert, arg[1]))
 else
   print("unable find text insertion point")
-  return 1
+  quit(1)
 end
 
 -- find data insertion point
@@ -60,10 +75,11 @@ local data_search = gru:blob_create()
 data_search:writestring(0, "gspL3DEX2_fifoDataStart")
 data_insert = dst:find(data_search)
 if data_insert then
-  print(string.format("found data insertion point at 0x%08X in `%s`", data_insert, arg[1]))
+  print(string.format("found data insertion point at 0x%08X in `%s`",
+                      data_insert, arg[1]))
 else
   print("unable find data insertion point")
-  return 1
+  quit(1)
 end
 
 -- include destination locations as search locations in source
@@ -92,7 +108,7 @@ for i = 1,#text_loc do
 end
 if not text then
   print("unable find text chunk")
-  return 1
+  quit(1)
 end
 
 -- find data
@@ -112,7 +128,7 @@ for i = 1,#data_loc do
 end
 if not data then
   print("unable find data chunk")
-  return 1
+  quit(1)
 end
 
 -- insert microcode
@@ -125,3 +141,4 @@ print("saving rom to `" .. arg[1] .. "`")
 dst:save(arg[1])
 
 print("done")
+quit(0)

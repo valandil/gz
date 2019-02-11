@@ -14,6 +14,7 @@ struct item_data
   int                     texture_tile_off;
   uint32_t                color_off;
   float                   scale;
+  _Bool                   disable_shadow;
   int                     anim_state;
 };
 
@@ -73,8 +74,12 @@ static int draw_proc(struct menu_item *item,
                                               (color >> 8)  & 0xFF,
                                               (color >> 0)  & 0xFF,
                                               draw_params->alpha));
-  gfx_mode_replace(GFX_MODE_FILTER, G_TF_BILERP);
-  gfx_mode_replace(GFX_MODE_DROPSHADOW, 0);
+  if (data->scale != 1.f)
+    gfx_mode_replace(GFX_MODE_FILTER, G_TF_BILERP);
+  else
+    gfx_mode_replace(GFX_MODE_FILTER, G_TF_POINT);
+  if (data->disable_shadow)
+    gfx_mode_replace(GFX_MODE_DROPSHADOW, 0);
   struct gfx_sprite sprite =
   {
     texture, texture_tile,
@@ -82,7 +87,8 @@ static int draw_proc(struct menu_item *item,
   };
   gfx_sprite_draw(&sprite);
   gfx_mode_pop(GFX_MODE_FILTER);
-  gfx_mode_pop(GFX_MODE_DROPSHADOW);
+  if (data->disable_shadow)
+    gfx_mode_pop(GFX_MODE_DROPSHADOW);
   if (data->anim_state > 0)
     data->anim_state = (data->anim_state + 1) % 3;
   return 1;
@@ -105,12 +111,10 @@ static int activate_proc(struct menu_item *item)
 
 struct menu_item *menu_add_switch(struct menu *menu, int x, int y,
                                   struct gfx_texture *texture_on,
-                                  int texture_tile_on,
-                                  uint32_t color_on,
+                                  int texture_tile_on, uint32_t color_on,
                                   struct gfx_texture *texture_off,
-                                  int texture_tile_off,
-                                  uint32_t color_off,
-                                  float scale,
+                                  int texture_tile_off, uint32_t color_off,
+                                  float scale, _Bool disable_shadow,
                                   menu_generic_callback callback_proc,
                                   void *callback_data)
 {
@@ -126,6 +130,7 @@ struct menu_item *menu_add_switch(struct menu *menu, int x, int y,
   data->texture_tile_off = texture_tile_off;
   data->color_off = color_off;
   data->scale = scale;
+  data->disable_shadow = disable_shadow;
   data->anim_state = 0;
   item->data = data;
   item->enter_proc = enter_proc;

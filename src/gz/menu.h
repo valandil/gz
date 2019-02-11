@@ -119,11 +119,6 @@ enum watch_type
   WATCH_TYPE_MAX,
 };
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 void                menu_init(struct menu *menu,
                               int cell_width, int cell_height,
                               struct gfx_font *font);
@@ -248,12 +243,10 @@ struct menu_item   *menu_add_submenu(struct menu *menu, int x, int y,
                                      struct menu *submenu, const char *name);
 struct menu_item   *menu_add_switch(struct menu *menu, int x, int y,
                                     struct gfx_texture *texture_on,
-                                    int texture_tile_on,
-                                    uint32_t color_on,
+                                    int texture_tile_on, uint32_t color_on,
                                     struct gfx_texture *texture_off,
-                                    int texture_tile_off,
-                                    uint32_t color_off,
-                                    float scale,
+                                    int texture_tile_off, uint32_t color_off,
+                                    float scale, _Bool disable_shadow,
                                     menu_generic_callback callback_proc,
                                     void *callback_data);
 void                menu_switch_set(struct menu_item *item, _Bool state);
@@ -276,10 +269,5 @@ struct menu_item   *menu_add_checkbox(struct menu *menu, int x, int y,
                                       void *callback_data);
 _Bool               menu_checkbox_get(struct menu_item *item);
 void                menu_checkbox_set(struct menu_item *item, _Bool state);
-
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

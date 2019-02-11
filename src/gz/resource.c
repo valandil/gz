@@ -105,24 +105,24 @@ static void *rc_font_pixelzim(void)
 
 static void *rc_zicon_item(void)
 {
-  static struct gfx_texdesc td =
+  struct gfx_texdesc td =
   {
     G_IM_FMT_RGBA, G_IM_SIZ_32b, 0x0,
     32, 32, 1, 90,
-    z64_icon_item_static_vaddr,
-    z64_icon_item_static_vsize,
+    z64_ftab[8].vrom_start,
+    z64_ftab[8].vrom_end - z64_ftab[8].vrom_start,
   };
   return gfx_texture_load(&td, NULL);
 }
 
 static void *rc_zicon_item_gray(void)
 {
-  static struct gfx_texdesc td =
+  struct gfx_texdesc td =
   {
     G_IM_FMT_RGBA, G_IM_SIZ_32b, 0x0,
     32, 32, 1, 90,
-    z64_icon_item_static_vaddr,
-    z64_icon_item_static_vsize,
+    z64_ftab[8].vrom_start,
+    z64_ftab[8].vrom_end - z64_ftab[8].vrom_start,
   };
   struct gfx_texture *texture = gfx_texture_load(&td, NULL);
   MtxF cm = guDefMtxF(.75f, 0.f,  0.f,  0.f,
@@ -136,60 +136,60 @@ static void *rc_zicon_item_gray(void)
 
 static void *rc_zicon_item_24(void)
 {
-  static struct gfx_texdesc td =
+  struct gfx_texdesc td =
   {
     G_IM_FMT_RGBA, G_IM_SIZ_32b, 0x0,
     24, 24, 1, 20,
-    z64_icon_item_24_static_vaddr,
-    z64_icon_item_24_static_vsize,
+    z64_ftab[9].vrom_start,
+    z64_ftab[9].vrom_end - z64_ftab[9].vrom_start,
   };
   return gfx_texture_load(&td, NULL);
 }
 
 static void *rc_zicon_note(void)
 {
-  static struct gfx_texdesc td =
+  struct gfx_texdesc td =
   {
     G_IM_FMT_IA, G_IM_SIZ_8b, 0x00088040,
     16, 24, 1, 1,
-    z64_icon_item_static_vaddr,
-    z64_icon_item_static_vsize,
+    z64_ftab[8].vrom_start,
+    z64_ftab[8].vrom_end - z64_ftab[8].vrom_start,
   };
   return gfx_texture_load(&td, NULL);
 }
 
 static void *rc_zicon_rupee(void)
 {
-  static struct gfx_texdesc td =
+  struct gfx_texdesc td =
   {
     G_IM_FMT_IA, G_IM_SIZ_8b, 0x00001F00,
     16, 16, 1, 1,
-    z64_parameter_static_vaddr,
-    z64_parameter_static_vsize,
+    z64_ftab[940].vrom_start,
+    z64_ftab[940].vrom_end - z64_ftab[940].vrom_start,
   };
   return gfx_texture_load(&td, NULL);
 }
 
 static void *rc_zicon_action_buttons(void)
 {
-  static struct gfx_texdesc td =
+  struct gfx_texdesc td =
   {
     G_IM_FMT_IA, G_IM_SIZ_8b, 0x00000A00,
     32, 32, 1, 5,
-    z64_parameter_static_vaddr,
-    z64_parameter_static_vsize,
+    z64_ftab[940].vrom_start,
+    z64_ftab[940].vrom_end - z64_ftab[940].vrom_start,
   };
   return gfx_texture_load(&td, NULL);
 }
 
 static void *rc_zfont_nes(void)
 {
-  static struct gfx_texdesc td =
+  struct gfx_texdesc td =
   {
     G_IM_FMT_I, G_IM_SIZ_4b, 0x0,
     16, 224, 1, 10,
-    z64_nes_font_static_vaddr,
-    z64_nes_font_static_vsize,
+    z64_ftab[21].vrom_start,
+    z64_ftab[21].vrom_end - z64_ftab[21].vrom_start,
   };
   return rc_font_generic(&td, 16, 16, 32, -6, -5, 12, 4, 0);
 }
@@ -219,6 +219,16 @@ static void *rc_icon_pause(void)
   return resource_load_grc_texture("pause_icons");
 }
 
+static void *rc_icon_macro(void)
+{
+  return resource_load_grc_texture("macro_icons");
+}
+
+static void *rc_icon_movie(void)
+{
+  return resource_load_grc_texture("movie_icons");
+}
+
 static void *rc_icon_arrow(void)
 {
   return resource_load_grc_texture("arrow_icons");
@@ -227,6 +237,11 @@ static void *rc_icon_arrow(void)
 static void *rc_icon_file(void)
 {
   return resource_load_grc_texture("file_icons");
+}
+
+static void *rc_icon_save(void)
+{
+  return resource_load_grc_texture("save_icons");
 }
 
 static void *rc_texture_crosshair(void)
@@ -266,8 +281,11 @@ static void *(*res_ctor[RES_MAX])(void) =
   rc_icon_amount,
   rc_icon_buttons,
   rc_icon_pause,
+  rc_icon_macro,
+  rc_icon_movie,
   rc_icon_arrow,
   rc_icon_file,
+  rc_icon_save,
   rc_texture_crosshair,
 };
 
@@ -289,6 +307,9 @@ static void (*res_dtor[RES_MAX])() =
   gfx_texture_free,
   gfx_texture_free,
   rd_font_generic,
+  gfx_texture_free,
+  gfx_texture_free,
+  gfx_texture_free,
   gfx_texture_free,
   gfx_texture_free,
   gfx_texture_free,
