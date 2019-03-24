@@ -851,7 +851,9 @@ void zu_reloc_gfx(int src_gfx_idx, int src_cimg_idx)
       /* check gbi commands with addresses in the low word */
       switch (p->hi >> 24) {
         case G_VTX:             break;
+        #ifndef F3D_GBI
         case G_DMA_IO:          break;
+        #endif
         case G_MTX:             break;
         case G_MOVEWORD:
           switch ((p->hi >> 16) & 0xFF) {
@@ -859,12 +861,16 @@ void zu_reloc_gfx(int src_gfx_idx, int src_cimg_idx)
             default:            continue;
           }                     break;
         case G_MOVEMEM:         break;
+        #ifndef F3D_GBI
         case G_LOAD_UCODE:      break;
+        #endif
         case G_DL:              break;
         case G_RDPHALF_1:
           switch (p[1].hi >> 24) {
+            #ifndef F3D_GBI
             case G_BRANCH_Z:    break;
             case G_LOAD_UCODE:  break;
+            #endif
             default:            continue;
           }                     break;
         case G_SETTIMG:         break;
