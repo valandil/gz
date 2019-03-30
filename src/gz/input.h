@@ -8,20 +8,22 @@
 
 #define INPUT_REPEAT_DELAY    8
 
-#define BUTTON_C_RIGHT        0x0001
-#define BUTTON_C_LEFT         0x0002
-#define BUTTON_C_DOWN         0x0004
-#define BUTTON_C_UP           0x0008
-#define BUTTON_R              0x0010
-#define BUTTON_L              0x0020
-#define BUTTON_D_RIGHT        0x0100
-#define BUTTON_D_LEFT         0x0200
-#define BUTTON_D_DOWN         0x0400
-#define BUTTON_D_UP           0x0800
-#define BUTTON_START          0x1000
-#define BUTTON_Z              0x2000
-#define BUTTON_B              0x4000
-#define BUTTON_A              0x8000
+#define BUTTON_C_RIGHT        (1 << 0)  // 0x0001
+#define BUTTON_C_LEFT         (1 << 1)  // 0x0002
+#define BUTTON_C_DOWN         (1 << 2)  // 0x0004
+#define BUTTON_C_UP           (1 << 3)  // 0x0008
+#define BUTTON_R              (1 << 4)  // 0x0010
+#define BUTTON_L              (1 << 5)  // 0x0020
+#define DUMMY_2               (1 << 6)  // 0x0040 (unused)
+#define DUMMY_1               (1 << 7)  // 0x0080 (unused)
+#define BUTTON_D_RIGHT        (1 << 8)  // 0x0100
+#define BUTTON_D_LEFT         (1 << 9)  // 0x0200
+#define BUTTON_D_DOWN         (1 << 10) // 0x0400
+#define BUTTON_D_UP           (1 << 11) // 0x0800
+#define BUTTON_START          (1 << 12) // 0x1000
+#define BUTTON_Z              (1 << 13) // 0x2000
+#define BUTTON_B              (1 << 14) // 0x4000
+#define BUTTON_A              (1 << 15) // 0x8000
 
 void      input_update(void);
 uint16_t  input_z_pad(void);

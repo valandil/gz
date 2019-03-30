@@ -7,6 +7,7 @@
 #include "resource.h"
 #include "settings.h"
 #include "z64.h"
+#include "gz_api.h"
 
 #define           BIND_END 6
 static int8_t     joy_x;
@@ -74,8 +75,8 @@ const uint32_t input_button_color[] =
 
 void input_update(void)
 {
-  joy_x = z64_input_direct.raw.x;
-  joy_y = z64_input_direct.raw.y;
+  joy_x = get_raw_input_x();
+  joy_y = get_raw_input_y();
   uint16_t z_pad = input_z_pad();
   pad_pressed_raw = (pad ^ z_pad) & z_pad;
   pad_released = (pad ^ z_pad) & ~z_pad;
@@ -159,7 +160,7 @@ void input_update(void)
 
 uint16_t input_z_pad(void)
 {
-  return z64_input_direct.raw.pad | input_sch_pad;
+  return get_input_z_pad() | input_sch_pad;
 }
 
 int8_t input_x(void)
