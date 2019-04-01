@@ -9,6 +9,7 @@
 #include "z64.h"
 #include "zu.h"
 #include "gz_api.h"
+#include "../../../src/sm64.h"
 
 #define           GFX_DISP_SIZE     0x10000
 static Gfx       *gfx_disp;
@@ -200,7 +201,7 @@ void gfx_flush(void)
   flush_chars();
   gSPEndDisplayList(gfx_disp_p++);
   Gfx * dl_injection = get_display_list_for_injection();
-  gSPDisplayList(dl_injection++,gfx_disp);
+  gSPDisplayList(SM64_gDisplayListHead++,gfx_disp);
   Gfx *disp_w = gfx_disp_w;
   gfx_disp_w = gfx_disp;
   gfx_disp = disp_w;
