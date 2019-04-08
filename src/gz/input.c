@@ -5,9 +5,9 @@
 #include "input.h"
 #include "menu.h"
 #include "resource.h"
-#include "settings.h"
 #include "z64.h"
 #include "gz_api.h"
+#include "settings.h"
 
 #define           BIND_END 6
 static int8_t     joy_x;

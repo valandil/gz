@@ -244,10 +244,19 @@ void menu_draw(struct menu *menu)
       menu_draw(item->imenu);
     if (!draw_params.text || !draw_params.font)
       continue;
+#ifdef F3D_GBI
+    gfx_mode_replace(GFX_MODE_COLOR, GPACK_RGB24A8(draw_params.color,
+                                                   draw_params.alpha));
+#else
     gfx_mode_set(GFX_MODE_COLOR, GPACK_RGB24A8(draw_params.color,
                                                draw_params.alpha));
+#endif
     gfx_printf(draw_params.font, draw_params.x, draw_params.y,
                "%s", draw_params.text);
+
+#ifdef F3D_GBI
+    gfx_mode_pop(GFX_MODE_COLOR);
+#endif
   }
 }
 
