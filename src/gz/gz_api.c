@@ -3,9 +3,10 @@
 #include "z64.h"
 
 // gfx functions
-Gfx * get_display_list_for_injection(void)
+Gfx ** get_display_list_for_injection(void)
 {
-  return z64_ctxt.gfx->overlay.p;
+
+  return &z64_ctxt.gfx->overlay.p;
 }
 
 // input functions

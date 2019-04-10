@@ -4,7 +4,7 @@
 #include "gfx.h"
 
 // gfx functions
-Gfx * get_display_list_for_injection(void);
+Gfx ** get_display_list_for_injection(void);
 
 // input functions
 int8_t   get_raw_input_x(void);

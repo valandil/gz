@@ -199,8 +199,8 @@ void gfx_flush(void)
 {
   flush_chars();
   gSPEndDisplayList(gfx_disp_p++);
-  Gfx * dl_injection = get_display_list_for_injection();
-  gSPDisplayList(dl_injection++,gfx_disp);
+  Gfx ** dl_injection = get_display_list_for_injection();
+  gSPDisplayList((*dl_injection)++,gfx_disp);
   Gfx *disp_w = gfx_disp_w;
   gfx_disp_w = gfx_disp;
   gfx_disp = disp_w;
