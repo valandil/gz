@@ -7,7 +7,7 @@
 #include "resource.h"
 #include "z64.h"
 #include "gz_api.h"
-#include "settings.h"
+#include STRINGIFY_MACRO(SETTINGS_HEADER)
 
 #define           BIND_END 6
 static int8_t     joy_x;

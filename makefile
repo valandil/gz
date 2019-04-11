@@ -15,7 +15,7 @@ LUAPATCH              = luapatch
 GRC                   = AS=$(CROSS)as $(TOOLS_BINDIR)grc
 LDSCRIPT              = $(N64_SYSROOT)/lib/gl-n64.ld
 ALL_CPPFLAGS          = -DPACKAGE_TARNAME="$(PACKAGE_TARNAME)" -DPACKAGE_URL="$(PACKAGE_URL)" $(CPPFLAGS)
-ALL_CFLAGS            = -std=gnu11 -Wall -ffunction-sections -fdata-sections $(CFLAGS)
+ALL_CFLAGS            = -std=gnu11 -Wall -ffunction-sections -fdata-sections -DSETTINGS_HEADER=settings.h $(CFLAGS)
 ALL_CXXFLAGS          = -std=gnu++14 -Wall -ffunction-sections -fdata-sections $(CXXFLAGS)
 ALL_LDFLAGS           = -T $(LDSCRIPT) -nostartfiles -specs=nosys.specs -Wl,--gc-sections $(LDFLAGS)
 LDLIBS                =

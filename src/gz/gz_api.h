@@ -1,7 +1,10 @@
 #ifndef GZ_API_H
 #define GZ_API_H
 
-#include "gfx.h"
+#include <n64.h>
+
+#define STRINGIFY_MACRO(x) STR(x)
+#define STR(x) #x
 
 // gfx functions
 Gfx ** get_display_list_for_injection(void);
