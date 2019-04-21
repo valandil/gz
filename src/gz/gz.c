@@ -9,6 +9,7 @@
 #include "explorer.h"
 #include "gfx.h"
 #include "gz.h"
+#include "gz_api.h"
 #include "input.h"
 #include "menu.h"
 #include "resource.h"
@@ -367,9 +368,9 @@ static void main_hook(void)
       gfx_mode_set(GFX_MODE_COLOR, GPACK_RGBA8888(0xC0, 0x00, 0x00, alpha));
       const char *tarname = STRINGIFY(PACKAGE_TARNAME);
       const char *url = STRINGIFY(PACKAGE_URL);
-      gfx_printf(font, 16, Z64_SCREEN_HEIGHT - 6 - ch, tarname);
-      gfx_printf(font, Z64_SCREEN_WIDTH - 12 - cw * strlen(url),
-                 Z64_SCREEN_HEIGHT - 6 - ch, url);
+      gfx_printf(font, 16, GAME_SCREEN_HEIGHT - 6 - ch, tarname);
+      gfx_printf(font, GAME_SCREEN_WIDTH - 12 - cw * strlen(url),
+                 GAME_SCREEN_HEIGHT - 6 - ch, url);
       if (!logo_texture)
         logo_texture = resource_load_grc_texture("logo");
       gfx_mode_set(GFX_MODE_COLOR, GPACK_RGBA8888(0xFF, 0xFF, 0xFF, alpha));
@@ -377,8 +378,8 @@ static void main_hook(void)
         struct gfx_sprite logo_sprite =
         {
           logo_texture, i,
-          Z64_SCREEN_WIDTH - 12 - logo_texture->tile_width,
-          Z64_SCREEN_HEIGHT - 6 - ch * 2 -
+          GAME_SCREEN_WIDTH - 12 - logo_texture->tile_width,
+          GAME_SCREEN_HEIGHT - 6 - ch * 2 -
           (logo_texture->tiles_y - i) * logo_texture->tile_height,
           1.f, 1.f,
         };
@@ -575,7 +576,7 @@ static void state_main_hook(void)
     else {
       /* non-frame, clear screen */
       gDPSetColorImage(gfx->poly_opa.p++,
-                       G_IM_FMT_RGBA, G_IM_SIZ_16b, Z64_SCREEN_WIDTH,
+                       G_IM_FMT_RGBA, G_IM_SIZ_16b, GAME_SCREEN_WIDTH,
                        ZU_MAKE_SEG(Z64_SEG_CIMG, 0));
       gDPSetCycleType(gfx->poly_opa.p++, G_CYC_FILL);
       gDPSetRenderMode(gfx->poly_opa.p++, G_RM_NOOP, G_RM_NOOP2);
@@ -583,7 +584,7 @@ static void state_main_hook(void)
                       (GPACK_RGBA5551(0x00, 0x00, 0x00, 0x01) << 16) |
                       GPACK_RGBA5551(0x00, 0x00, 0x00, 0x01));
       gDPFillRectangle(gfx->poly_opa.p++,
-                       0, 0, Z64_SCREEN_WIDTH - 1, Z64_SCREEN_HEIGHT - 1);
+                       0, 0, GAME_SCREEN_WIDTH - 1, GAME_SCREEN_HEIGHT - 1);
       gDPPipeSync(gfx->poly_opa.p++);
     }
     /* undo frame counter increment */

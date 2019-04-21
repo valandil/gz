@@ -6,9 +6,9 @@
 #include <mips.h>
 #include <n64.h>
 #include "gfx.h"
+#include "gz_api.h"
 #include "z64.h"
 #include "zu.h"
-#include "gz_api.h"
 
 #define           GFX_DISP_SIZE     0x10000
 static Gfx       *gfx_disp;
@@ -80,7 +80,7 @@ void gfx_mode_init(void)
   gDPSetCycleType(gfx_disp_p++, G_CYC_1CYCLE);
   gDPSetRenderMode(gfx_disp_p++, G_RM_XLU_SURF, G_RM_XLU_SURF2);
   gDPSetScissor(gfx_disp_p++, G_SC_NON_INTERLACE,
-                0, 0, Z64_SCREEN_WIDTH, Z64_SCREEN_HEIGHT);
+                0, 0, GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT);
   gDPSetAlphaDither(gfx_disp_p++, G_AD_DISABLE);
   gDPSetColorDither(gfx_disp_p++, G_CD_DISABLE);
   gDPSetAlphaCompare(gfx_disp_p++, G_AC_NONE);

@@ -6,6 +6,14 @@
 #define STRINGIFY_MACRO(x) STR(x)
 #define STR(x) #x
 
+// Default values for the screen size.
+#ifndef GAME_SCREEN_WIDTH
+#define GAME_SCREEN_WIDTH          320
+#endif
+#ifndef GAME_SCREEN_HEIGHT
+#define GAME_SCREEN_HEIGHT         240
+#endif
+
 // gfx functions
 Gfx ** get_display_list_for_injection(void);
 

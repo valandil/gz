@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "input.h"
+#include "gz_api.h"
 #include "resource.h"
 #include "settings.h"
 #include "zu.h"
@@ -60,10 +61,10 @@ void settings_load_default(void)
   d->menu_x = 16;
   d->menu_y = 64;
   d->input_display_x = 16;
-  d->input_display_y = Z64_SCREEN_HEIGHT - 6;
-  d->log_x = Z64_SCREEN_WIDTH - 12;
-  d->log_y = Z64_SCREEN_HEIGHT - 14;
-  d->lag_counter_x = Z64_SCREEN_WIDTH - 12;
+  d->input_display_y = GAME_SCREEN_HEIGHT - 6;
+  d->log_x = GAME_SCREEN_WIDTH - 12;
+  d->log_y = GAME_SCREEN_HEIGHT - 14;
+  d->lag_counter_x = GAME_SCREEN_WIDTH - 12;
   d->lag_counter_y = 20;
 #ifndef WIIVC
   d->timer_x = 16;

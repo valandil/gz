@@ -5,6 +5,7 @@
 #include <n64.h>
 #include <set/set.h>
 #include "gz.h"
+#include "gz_api.h"
 #include "state.h"
 #include "sys.h"
 #include "yaz0.h"
@@ -1466,10 +1467,10 @@ void load_state(void *state)
   }
   /* clear unsaved textures */
   if (c_pause_objects && !p_pause_objects) {
-    uint16_t (*img)[Z64_SCREEN_HEIGHT][Z64_SCREEN_WIDTH];
+    uint16_t (*img)[GAME_SCREEN_HEIGHT][GAME_SCREEN_WIDTH];
     img = (void*)z64_zimg_addr;
-    for (int y = 0; y < Z64_SCREEN_HEIGHT; ++y)
-      for (int x = 0; x < Z64_SCREEN_WIDTH; ++x)
+    for (int y = 0; y < GAME_SCREEN_HEIGHT; ++y)
+      for (int x = 0; x < GAME_SCREEN_WIDTH; ++x)
         (*img)[y][x] = GPACK_RGBA5551(0x00, 0x00, 0x00, 0x00);
   }
   if (c_pause_objects && !c_gameover && (!p_pause_objects || p_gameover)) {
@@ -1515,7 +1516,7 @@ void load_state(void *state)
     z64_gfx_t *gfx = z64_ctxt.gfx;
     gfx->work.p = gfx->work.buf;
     gDPSetColorImage(gfx->work.p++,
-                     G_IM_FMT_RGBA, G_IM_SIZ_16b, Z64_SCREEN_WIDTH,
+                     G_IM_FMT_RGBA, G_IM_SIZ_16b, GAME_SCREEN_WIDTH,
                      ZU_MAKE_SEG(Z64_SEG_CIMG, 0));
     gDPSetCycleType(gfx->work.p++, G_CYC_FILL);
     gDPSetRenderMode(gfx->work.p++, G_RM_NOOP, G_RM_NOOP2);
@@ -1523,7 +1524,7 @@ void load_state(void *state)
                     (GPACK_RGBA5551(0x1F, 0x1F, 0x1F, 0x01) << 16) |
                     GPACK_RGBA5551(0x1F, 0x1F, 0x1F, 0x01));
     gDPFillRectangle(gfx->work.p++,
-                     0, 0, Z64_SCREEN_WIDTH - 1, Z64_SCREEN_HEIGHT - 1);
+                     0, 0, GAME_SCREEN_WIDTH - 1, GAME_SCREEN_HEIGHT - 1);
     gDPPipeSync(gfx->work.p++);
     gDPFullSync(gfx->work.p++);
     gSPEndDisplayList(gfx->work.p++);

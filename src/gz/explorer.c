@@ -5,6 +5,7 @@
 #include <n64.h>
 #include "gfx.h"
 #include "gu.h"
+#include "gz_api.h"
 #include "input.h"
 #include "menu.h"
 #include "resource.h"
@@ -326,18 +327,18 @@ static int draw_proc(struct menu_item *item,
     /* initialize rcp for rendering rooms */
     static void *zbuf = NULL;
     if (!zbuf)
-      zbuf = memalign(64, 2 * Z64_SCREEN_WIDTH * Z64_SCREEN_HEIGHT);
+      zbuf = memalign(64, 2 * GAME_SCREEN_WIDTH * GAME_SCREEN_HEIGHT);
     gDisplayListAppend(&data->gfx.poly_opa.p,
       /* clear z buffer */
       gsDPPipeSync(),
       gsDPSetCycleType(G_CYC_FILL),
       gsDPSetRenderMode(G_RM_NOOP, G_RM_NOOP2),
-      gsDPSetColorImage(G_IM_FMT_RGBA, G_IM_SIZ_16b, Z64_SCREEN_WIDTH, zbuf),
+      gsDPSetColorImage(G_IM_FMT_RGBA, G_IM_SIZ_16b, GAME_SCREEN_WIDTH, zbuf),
       gsDPSetFillColor((GPACK_ZDZ(G_MAXFBZ, 0) << 16) |
                        GPACK_ZDZ(G_MAXFBZ, 0)),
-      gsDPFillRectangle(0, 0, Z64_SCREEN_WIDTH - 1, Z64_SCREEN_HEIGHT - 1),
+      gsDPFillRectangle(0, 0, GAME_SCREEN_WIDTH - 1, GAME_SCREEN_HEIGHT - 1),
       gsDPPipeSync(),
-      gsDPSetColorImage(G_IM_FMT_RGBA, G_IM_SIZ_16b, Z64_SCREEN_WIDTH,
+      gsDPSetColorImage(G_IM_FMT_RGBA, G_IM_SIZ_16b, GAME_SCREEN_WIDTH,
                         ZU_MAKE_SEG(Z64_SEG_CIMG, 0)),
       gsDPSetDepthImage(zbuf),
       /* rsp settings */
@@ -366,7 +367,7 @@ static int draw_proc(struct menu_item *item,
       gsDPSetEnvColor(0xFF, 0xFF, 0xFF, 0xFF),
       gsDPSetFogColor(0x00, 0x00, 0x00, 0x00),
       gsDPSetScissor(G_SC_NON_INTERLACE, 32, 32,
-                     Z64_SCREEN_WIDTH - 32, Z64_SCREEN_HEIGHT - 32),
+                     GAME_SCREEN_WIDTH - 32, GAME_SCREEN_HEIGHT - 32),
     );
     /* create projection matrix */
     {
@@ -374,7 +375,7 @@ static int draw_proc(struct menu_item *item,
       MtxF mf;
       MtxF mt;
       guPerspectiveF(&mf, NULL, atanf(2.f),
-                     (float)Z64_SCREEN_WIDTH / (float)Z64_SCREEN_HEIGHT,
+                     (float)GAME_SCREEN_WIDTH / (float)GAME_SCREEN_HEIGHT,
                      50.f, 5000.f, 1.f);
       {
         guScaleF(&mt, data->scale, data->scale, data->scale);

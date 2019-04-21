@@ -3,6 +3,7 @@
 #include <n64.h>
 #include "gfx.h"
 #include "gu.h"
+#include "gz_api.h"
 #include "menu.h"
 #include "resource.h"
 #include "z64.h"
@@ -150,11 +151,11 @@ static int wheel_draw_proc(struct menu_item *item,
     MtxF mt;
     {
       guPerspectiveF(&mf, NULL, M_PI / 4.f,
-                     (float)Z64_SCREEN_WIDTH / (float)Z64_SCREEN_HEIGHT,
+                     (float)GAME_SCREEN_WIDTH / (float)GAME_SCREEN_HEIGHT,
                      1.f, 100.f, 1.f);
     }
     {
-      guTranslateF(&mt, 0.f, 0.f, 1.f - (Z64_SCREEN_WIDTH / 32.f * 2.f +
+      guTranslateF(&mt, 0.f, 0.f, 1.f - (GAME_SCREEN_WIDTH / 32.f * 2.f +
                                          data->n_items / M_PI));
       guMtxCatF(&mt, &mf, &mf);
     }
