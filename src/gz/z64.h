@@ -1886,8 +1886,10 @@ typedef struct
 #define z64_AfxCmdW_addr                        0x800BB0BC
 #define z64_FlushAfxCmd_addr                    0x800BB140
 #define z64_ConfigureAfx_addr                   0x800BB548
+#define z64_afx_rand_func_addr                  0x800BBD80
 #define z64_ocarina_input_call_addr             0x800C1F40
 #define z64_ocarina_sync_hook_addr              0x800C2EA0
+#define z64_afx_rand_call_addr                  0x800C3A50
 #define z64_ocarina_update_func_addr            0x800C3DC8
 #define z64_ResetAudio_addr                     0x800C7E98
 #define z64_CheckAfxConfigBusy_addr             0x800CB798
@@ -1915,6 +1917,8 @@ typedef struct
 #define z64_sky_images_addr                     0x800F184C
 #define z64_light_handlers_addr                 0x800F1B40
 #define z64_map_mark_ovl_addr                   0x800F1BF8
+#define z64_dins_state_1_addr                   0x800F1C18
+#define z64_dins_state_2_addr                   0x800F4C1C
 #define z64_minimap_entrance_x_addr             0x800F5530
 #define z64_minimap_entrance_y_addr             0x800F5534
 #define z64_minimap_entrance_r_addr             0x800F5538
@@ -1946,6 +1950,8 @@ typedef struct
 #define z64_gameover_countdown_addr             0x801132B0
 #define gspF3DEX2_NoN_fifoDataStart             0x801145C0
 #define z64_pfx_addr                            0x80114DE0
+#define z64_fw_state_1_addr                     0x80118BF8
+#define z64_fw_state_2_addr                     0x80118C00
 #define z64_camera_state_addr                   0x80118E20
 #define z64_file_addr                           0x8011A5D0
 #define z64_cs_state_addr                       0x8011BC20
@@ -2028,8 +2034,10 @@ typedef struct
 #define z64_AfxCmdW_addr                        0x800BB0DC
 #define z64_FlushAfxCmd_addr                    0x800BB160
 #define z64_ConfigureAfx_addr                   0x800BB568
+#define z64_afx_rand_func_addr                  0x800BBDA0
 #define z64_ocarina_input_call_addr             0x800C1F90
 #define z64_ocarina_sync_hook_addr              0x800C2EFC
+#define z64_afx_rand_call_addr                  0x800C3AC0
 #define z64_ocarina_update_func_addr            0x800C3E38
 #define z64_ResetAudio_addr                     0x800C8070
 #define z64_CheckAfxConfigBusy_addr             0x800CB958
@@ -2057,6 +2065,8 @@ typedef struct
 #define z64_sky_images_addr                     0x800F1A0C
 #define z64_light_handlers_addr                 0x800F1D00
 #define z64_map_mark_ovl_addr                   0x800F1DB8
+#define z64_dins_state_1_addr                   0x800F1DD8
+#define z64_dins_state_2_addr                   0x800F4DDC
 #define z64_minimap_entrance_x_addr             0x800F56F0
 #define z64_minimap_entrance_y_addr             0x800F56F4
 #define z64_minimap_entrance_r_addr             0x800F56F8
@@ -2088,6 +2098,8 @@ typedef struct
 #define z64_gameover_countdown_addr             0x80113470
 #define gspF3DEX2_NoN_fifoDataStart             0x80114780
 #define z64_pfx_addr                            0x80114FA0
+#define z64_fw_state_1_addr                     0x80118DB8
+#define z64_fw_state_2_addr                     0x80118DC0
 #define z64_camera_state_addr                   0x80118FE0
 #define z64_file_addr                           0x8011A790
 #define z64_cs_state_addr                       0x8011BDE0
@@ -2170,8 +2182,10 @@ typedef struct
 #define z64_AfxCmdW_addr                        0x800BB740
 #define z64_FlushAfxCmd_addr                    0x800BB7C4
 #define z64_ConfigureAfx_addr                   0x800BBBCC
+#define z64_afx_rand_func_addr                  0x800BC404
 #define z64_ocarina_input_call_addr             0x800C25F0
 #define z64_ocarina_sync_hook_addr              0x800C355C
+#define z64_afx_rand_call_addr                  0x800C4118
 #define z64_ocarina_update_func_addr            0x800C4490
 #define z64_ResetAudio_addr                     0x800C86E8
 #define z64_CheckAfxConfigBusy_addr             0x800CBFD8
@@ -2199,6 +2213,8 @@ typedef struct
 #define z64_sky_images_addr                     0x800F1E8C
 #define z64_light_handlers_addr                 0x800F2180
 #define z64_map_mark_ovl_addr                   0x800F2238
+#define z64_dins_state_1_addr                   0x800F2258
+#define z64_dins_state_2_addr                   0x800F525C
 #define z64_minimap_entrance_x_addr             0x800F5B70
 #define z64_minimap_entrance_y_addr             0x800F5B74
 #define z64_minimap_entrance_r_addr             0x800F5B78
@@ -2230,6 +2246,8 @@ typedef struct
 #define z64_gameover_countdown_addr             0x80113960
 #define gspF3DEX2_NoN_fifoDataStart             0x80114C70
 #define z64_pfx_addr                            0x80115490
+#define z64_fw_state_1_addr                     0x801192A8
+#define z64_fw_state_2_addr                     0x801192B0
 #define z64_camera_state_addr                   0x801194D0
 #define z64_file_addr                           0x8011AC80
 #define z64_cs_state_addr                       0x8011C2D0

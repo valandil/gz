@@ -1,24 +1,27 @@
 PACKAGE_TARNAME      ?= gz
 PACKAGE_URL          ?= github.com/glankk/gz
+<<<<<<< HEAD
 CROSS                ?= mips64-elf-
 N64_SYSROOT          ?= /opt/n64/mips64/n64-sysroot/usr/
 TOOLS_BINDIR         ?= /opt/n64/bin/
-AS                    = $(CROSS)gcc
+AS                    = $(CROSS)as
+CCAS                  = $(CROSS)gcc -x assembler-with-cpp
+CPP                   = $(CROSS)cpp
 CC                    = $(CROSS)gcc
 CXX                   = $(CROSS)g++
 LD                    = $(CROSS)g++
 OBJCOPY               = $(CROSS)objcopy
 NM                    = $(CROSS)nm
 READELF               = $(CROSS)readelf
-GENHOOKS              = ./genhooks
+GENHOOKS              = AS='$(AS)' CPP='$(CPP)' NM='$(NM)' READELF='$(READELF)' CPPFLAGS='$(subst ','\'',$(CPPFLAGS))' ./genhooks
 LUAPATCH              = luapatch
-GRC                   = AS=$(CROSS)as $(TOOLS_BINDIR)grc
+GRC                   = AS='$(AS)' $(TOOLS_BINDIR)grc
 LDSCRIPT              = $(N64_SYSROOT)/lib/gl-n64.ld
 ALL_CPPFLAGS          = -DPACKAGE_TARNAME="$(PACKAGE_TARNAME)" -DPACKAGE_URL="$(PACKAGE_URL)" $(CPPFLAGS)
 ALL_CFLAGS            = -std=gnu11 -Wall -ffunction-sections -fdata-sections -DSETTINGS_HEADER=settings.h $(CFLAGS)
 ALL_CXXFLAGS          = -std=gnu++14 -Wall -ffunction-sections -fdata-sections $(CXXFLAGS)
 ALL_LDFLAGS           = -T $(LDSCRIPT) -nostartfiles -specs=nosys.specs -Wl,--gc-sections $(LDFLAGS)
-LDLIBS                =
+ALL_LDLIBS            = $(LDLIBS)
 LUAFILE               = $(EMUDIR)/Lua/patch-data.lua
 RESDESC               = $(RESDIR)/resources.json
 GZ_VERSIONS           = oot-1.0 oot-1.1 oot-1.2 oot-vc
@@ -33,8 +36,8 @@ CFILES                = *.c
 CXXFILES              = *.cpp *.cxx *.cc *.c++
 
 OOT-1.0               = $(OBJ-gz-oot-1.0) $(ELF-gz-oot-1.0) $(HOOKS-gz-oot-1.0)
-OOT-1.1               = $(OBJ-gz-oot-1.1) $(ELF-gz-oot-1.0) $(HOOKS-gz-oot-1.1)
-OOT-1.2               = $(OBJ-gz-oot-1.2) $(ELF-gz-oot-1.0) $(HOOKS-gz-oot-1.2)
+OOT-1.1               = $(OBJ-gz-oot-1.1) $(ELF-gz-oot-1.1) $(HOOKS-gz-oot-1.1)
+OOT-1.2               = $(OBJ-gz-oot-1.2) $(ELF-gz-oot-1.2) $(HOOKS-gz-oot-1.2)
 VC                    = $(OBJ-gz-oot-vc) $(ELF-gz-oot-vc) $(HOOKS-gz-oot-vc)
 N64                   = $(OOT-1.0) $(OOT-1.1) $(OOT-1.2)
 
@@ -78,9 +81,9 @@ define bin_template
  $$(BIN-$(1))         : $$(ELF-$(1)) | $$(BINDIR-$(1))
 	$$(OBJCOPY) -S -O binary $$< $$@
  $$(ELF-$(1))         : $$(OBJ-$(1)) | $$(BINDIR-$(1))
-	$$(LD) $$(ALL_LDFLAGS) $$^ $$(LDLIBS) -o $$@
+	$$(LD) $$(ALL_LDFLAGS) $$^ $$(ALL_LDLIBS) -o $$@
  $$(ASMOBJ-$(1))      : $$(OBJDIR-$(1))/%.o: $$(SRCDIR-$(1))/% | $$(OBJDIR-$(1))
-	$$(AS) -c -MMD -MP $$(ALL_CPPFLAGS) $$< -o $$@
+	$$(CCAS) -c -MMD -MP $$(ALL_CPPFLAGS) $$< -o $$@
  $$(COBJ-$(1))        : $$(OBJDIR-$(1))/%.o: $$(SRCDIR-$(1))/% | $$(OBJDIR-$(1))
 	$$(CC) -c -MMD -MP $$(ALL_CPPFLAGS) $$(ALL_CFLAGS) $$< -o $$@
  $$(CXXOBJ-$(1))      : $$(OBJDIR-$(1))/%.o: $$(SRCDIR-$(1))/% | $$(OBJDIR-$(1))
@@ -95,7 +98,7 @@ endef
 define hooks_template
  HOOKS-$(1)           = $$(DIR-$(1))/hooks.gsc
  $$(HOOKS-$(1))       : $$(ELF-$(1))
-	AS="$$(AS)" CC="$$(CC)" NM="$$(NM)" READELF="$$(READELF)" CPPFLAGS="$$(subst ",\",$$(CPPFLAGS))" $$(GENHOOKS) $$< > $$@
+	$$(GENHOOKS) $$< > $$@
  $(1)-hooks           : $$(HOOKS-$(1))
  clean-$(1)-hooks     :
 	rm -f $$(HOOKS-$(1))
