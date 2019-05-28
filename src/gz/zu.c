@@ -248,10 +248,12 @@ void zu_vlist_add_dl(struct zu_vlist *vlist,
         break;
       }
       #endif
+#if !defined(F3D_BETA)
       case G_RDPHALF_1: {
         rdphalf_1 = dl->lo;
         break;
       }
+#endif
       case G_DL: {
         zu_vlist_add_dl(vlist, NULL, zu_seg_locate(&t_stab, dl->lo));
         break;
@@ -865,19 +867,21 @@ void zu_reloc_gfx(int src_gfx_idx, int src_cimg_idx)
         case G_LOAD_UCODE:      break;
         #endif
         case G_DL:              break;
+#if !defined(F3D_GBI)
         case G_RDPHALF_1:
           switch (p[1].hi >> 24) {
-            #ifndef F3D_GBI
             case G_BRANCH_Z:    break;
             case G_LOAD_UCODE:  break;
-            #endif
             default:            continue;
           }                     break;
+#endif
         case G_SETTIMG:         break;
         case G_SETZIMG:         break;
         case G_SETCIMG:         break;
+#if defined(F3DEX_GBI) || defined(F3DEX_GBI_2)
         case G_BG_1CYC:         break;
         case G_BG_COPY:         break;
+#endif
         default:                continue;
       }
       /* relocate previous gfx -> current gfx, previous cimg -> current cimg */

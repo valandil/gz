@@ -160,7 +160,7 @@ void input_update(void)
 
 uint16_t input_z_pad(void)
 {
-  return get_input_z_pad() | input_sch_pad;
+  return get_input_z_pad();
 }
 
 int8_t input_x(void)
